@@ -5,9 +5,24 @@ import modele.logic.TargetBlinky;
 import modele.logic.TargetClyde;
 import modele.logic.TargetInky;
 import modele.logic.TargetPinky;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -40,12 +55,16 @@ public class Grid {
 
     private Map<MoveableEntity, Point> entities;
     private Map<Point, StaticEntity> movementMap;
+    private Map<MoveableEntity, Thread> threads;
 
     private int nbGum = 0;
     private int totalGum = 0;
 
     public Grid(String map) {
         this.map = map;
+
+        threads = new HashMap<>();
+
         scoreMap = new HashMap<>();
         scoreMap.put(StaticEntity.WALL, 0);
         scoreMap.put(StaticEntity.EMPTY, 0);
@@ -69,20 +88,18 @@ public class Grid {
         init();
     }
 
-    public EntityGhost getBlinky() {
-        return blinky;
-    }
-
-    public EntityGhost getPinky() {
-        return pinky;
-    }
-
-    public EntityGhost getInky() {
-        return inky;
-    }
-
-    public EntityGhost getClyde() {
-        return clyde;
+    public EntityGhost getGhost(GhostName name) {
+        switch (name) {
+            case BLINKY:
+                return blinky;
+            case INKY:
+                return inky;
+            case PINKY:
+                return pinky;
+            case CLYDE:
+                return clyde;
+        }
+        return null;
     }
 
     public int getSizeX() {
@@ -265,55 +282,39 @@ public class Grid {
         playerStartPos = new Point(1, 1);
 
         try {
-            FileReader input = new FileReader(map);
-            BufferedReader bufRead = new BufferedReader(input);
-            String line;
-            int lineIndex = 2;
-            int rowIndex = 0;
-            while ((line = bufRead.readLine()) != null)
-            {
-                rowIndex = 0;
-                for (char c : line.toCharArray()) {
-                    if (c == 'W')
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.WALL);
-                    else if (c == '0')
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                    else if (c == '1') {
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.GUM);
-                        nbGum++;
-                    } else if (c == '2') {
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.SUPER_GUM);
-                        nbGum++;
-                    } else if (c == 'G') {
-                        ghostHome = new Point(rowIndex, lineIndex);
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                    } else if (c == 'S') {
-                        ghostSpawn = new Point(rowIndex, lineIndex);
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                    } else if (c == 'P') {
-                        playerStartPos = new Point(rowIndex, lineIndex);
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                    } else if (c == 'I') {
-                        itemSpawn = new Point(rowIndex, lineIndex);
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                    }
-                    rowIndex++;
-                }
-                lineIndex++;
-            }
-            lineIndex++;
-            this.sizeX = rowIndex;
-            this.sizeY = lineIndex;
+            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            File fileXML = new File(map);
+            Document xml;
 
-            for (int i = 0; i < rowIndex; i++) {
-                movementMap.put(new Point(i, 0), StaticEntity.EMPTY);
-                movementMap.put(new Point(i, 1), StaticEntity.EMPTY);
-                movementMap.put(new Point(i, lineIndex-1), StaticEntity.EMPTY);
+            xml = builder.parse(fileXML);
+            Element maps = (Element)xml.getElementsByTagName("maps").item(0);
+            if (maps == null)
+                throw new Exception("Map file corrupted (maps node not found)");
+            NodeList mapList = maps.getElementsByTagName("map");
+            Element mapNode = null;
+            Element defaultMapNode = null;
+            for (int i = 0; i < mapList.getLength(); i++) {
+                Element e = (Element) mapList.item(i);
+                int start = Integer.parseInt(e.getAttribute("start"));
+                int end = Integer.parseInt(e.getAttribute("end"));
+                boolean isDefault = e.hasAttribute("default");
+                if (isDefault)
+                    defaultMapNode = e;
+                if (level <= end && level >= start)
+                    mapNode = e;
             }
-            totalGum = nbGum;
-        } catch (IOException e) {
+            if (mapNode != null) {
+                constructMap(mapNode);
+            } else {
+                if (defaultMapNode == null)
+                    throw new Exception("Map file corrupted (Default map not found)");
+                constructMap(defaultMapNode);
+            }
+        } catch (Exception e) {
             e.printStackTrace();
+            System.exit(-1);
         }
+
         entities.put(player, playerStartPos);
         entities.put(blinky, ghostSpawn);
         entities.put(clyde, ghostSpawn);
@@ -325,12 +326,67 @@ public class Grid {
         }
     }
 
+    private void constructMap(Element xmlElement) throws Exception {
+        sizeY = Integer.parseInt(xmlElement.getAttribute("sizeY")) + 3;
+        sizeX = Integer.parseInt(xmlElement.getAttribute("sizeX"));
+        String[] mapAsString = new String[sizeY - 3];
+        NodeList rows = xmlElement.getElementsByTagName("row");
+        for (int i = 0; i < rows.getLength(); i++) {
+            Element e = (Element) rows.item(i);
+            if (Integer.parseInt(e.getAttribute("id")) != i)
+                throw new Exception("Map file corrupted (mismatch rowID");
+            mapAsString[i] = e.getTextContent();
+        }
+        int lineIndex = 2;
+        int rowIndex = 0;
+        for (String line : mapAsString) {
+            rowIndex = 0;
+            for (char c : line.toCharArray()) {
+                if (c == 'W')
+                    movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.WALL);
+                else if (c == '0')
+                    movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
+                else if (c == '1') {
+                    movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.GUM);
+                    nbGum++;
+                } else if (c == '2') {
+                    movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.SUPER_GUM);
+                    nbGum++;
+                } else if (c == 'G') {
+                    ghostHome = new Point(rowIndex, lineIndex);
+                    movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
+                } else if (c == 'S') {
+                    ghostSpawn = new Point(rowIndex, lineIndex);
+                    movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
+                } else if (c == 'P') {
+                    playerStartPos = new Point(rowIndex, lineIndex);
+                    movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
+                } else if (c == 'I') {
+                    itemSpawn = new Point(rowIndex, lineIndex);
+                    movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
+                }
+                rowIndex++;
+            }
+            lineIndex++;
+        }
+        lineIndex++;
+        for (int i = 0; i < rowIndex; i++) {
+            movementMap.put(new Point(i, 0), StaticEntity.EMPTY);
+            movementMap.put(new Point(i, 1), StaticEntity.EMPTY);
+            movementMap.put(new Point(i, lineIndex-1), StaticEntity.EMPTY);
+        }
+        totalGum = nbGum;
+    }
+
     public void startEntities() {
-        new Thread(player).start();
-        new Thread(blinky).start();
-        new Thread(pinky).start();
-        new Thread(inky).start();
-        new Thread(clyde).start();
+        threads.put(player, new Thread(player));
+        threads.put(blinky, new Thread(blinky));
+        threads.put(pinky, new Thread(pinky));
+        threads.put(inky, new Thread(inky));
+        threads.put(clyde, new Thread(clyde));
+        for (MoveableEntity e : threads.keySet()) {
+            threads.get(e).start();
+        }
     }
 
     public void nextLevel() {
@@ -344,30 +400,17 @@ public class Grid {
         }
     }
 
-    public void resetEntities() {
-        entities.replace(player, playerStartPos);
-        entities.replace(blinky, ghostSpawn);
-        entities.replace(clyde, ghostSpawn);
-        entities.replace(pinky, ghostSpawn);
-        entities.replace(inky, ghostSpawn);
-        for (MoveableEntity e : entities.keySet()) {
-            e.reset();
-        }
-    }
-
     public void resetPlayer() {
         entities.replace(player, playerStartPos);
         player.reset();
     }
 
     public void resetGhost() {
-        entities.replace(blinky, ghostSpawn);
-        entities.replace(clyde, ghostSpawn);
-        entities.replace(pinky, ghostSpawn);
-        entities.replace(inky, ghostSpawn);
         for (MoveableEntity e : entities.keySet()) {
-            if (e instanceof EntityGhost)
+            if (e instanceof EntityGhost) {
+                entities.replace(e, ghostSpawn);
                 e.reset();
+            }
         }
     }
 

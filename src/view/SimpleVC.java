@@ -6,6 +6,7 @@
 package view;
 
 import javafx.scene.paint.Color;
+import javafx.stage.StageStyle;
 import modele.*;
 
 import java.awt.*;
@@ -60,7 +61,7 @@ public class SimpleVC extends Application {
     @Override
     public void start(Stage primaryStage) {
 
-        game = new PacMan("map.txt");
+        game = new PacMan("map.xml");
 
         backgroundTileMap = new HashMap<>();
         foregroundSpriteMap = new HashMap<>();
@@ -82,12 +83,16 @@ public class SimpleVC extends Application {
             System.exit(0);
         });
         primaryStage.setScene(scene);
+        primaryStage.initStyle(StageStyle.UTILITY);
+        primaryStage.setResizable(false);
         primaryStage.show();
 
         loadSprites();
 
         Observer o =  new Observer() {
             private final Runnable renderer = () -> {
+                primaryStage.setWidth(15*game.getSizeX() + 16);
+                primaryStage.setHeight(15*game.getSizeY() + 39);
                 drawBackground();
                 drawForeground();
                 drawGUI();
@@ -240,6 +245,8 @@ public class SimpleVC extends Application {
     }
 
     private void drawBackground() {
+        background.setWidth(15*game.getSizeX());
+        background.setHeight(15*game.getSizeY());
         final GraphicsContext gc = background.getGraphicsContext2D();
         for (int i = 0; i < game.getSizeX(); i++) {
             for (int j = 0; j < game.getSizeY(); j++) {
@@ -254,6 +261,8 @@ public class SimpleVC extends Application {
     }
 
     private void drawForeground() {
+        foreground.setWidth(15*game.getSizeX());
+        foreground.setHeight(15*game.getSizeY());
         final GraphicsContext gc = foreground.getGraphicsContext2D();
         gc.clearRect(0, 0, foreground.getWidth(), foreground.getHeight());
         if (!game.isPlayerDead()) {
@@ -275,10 +284,14 @@ public class SimpleVC extends Application {
             if (System.currentTimeMillis() <= whenToStopDeathAnim) {
                 Point pos = game.getPosition(game.getPlayer());
                 gc.drawImage(foregroundSpriteMap.get(game.getPlayer()).getFrame(SpriteID.DEATH), 15 * pos.x, 15 * pos.y);
-            } else {
+            } else if (!(game.isGameFinished() && game.isPlayerDead())){
                 game.resetPlayer();
                 isDeathAnimFinished = true;
                 foregroundSpriteMap.get(game.getPlayer()).getFrame(SpriteID.UP);
+                foregroundSpriteMap.get(game.getGhost(GhostName.BLINKY)).getFrame(SpriteID.UP);
+                foregroundSpriteMap.get(game.getGhost(GhostName.CLYDE)).getFrame(SpriteID.UP);
+                foregroundSpriteMap.get(game.getGhost(GhostName.INKY)).getFrame(SpriteID.UP);
+                foregroundSpriteMap.get(game.getGhost(GhostName.PINKY)).getFrame(SpriteID.UP);
                 drawSprite(game.getGhost(GhostName.BLINKY), gc);
                 drawSprite(game.getGhost(GhostName.INKY), gc);
                 drawSprite(game.getGhost(GhostName.PINKY), gc);
@@ -289,6 +302,8 @@ public class SimpleVC extends Application {
     }
 
     private void drawGUI() {
+        gui.setWidth(15*game.getSizeX());
+        gui.setHeight(15*game.getSizeY());
         final GraphicsContext gc = gui.getGraphicsContext2D();
         gc.clearRect(0, 0, gui.getWidth(), gui.getHeight());
 
@@ -315,7 +330,7 @@ public class SimpleVC extends Application {
             gc.drawImage(GUITileMap.get(GUIElement.GAME_OVER), 15*(game.getSizeX()/2 - 3), 15*(game.getSizeY()/2 + 1), 7*15, 15);
         }
 
-        int score = game.hasDynamicScoreAppened();
+        int score = game.getDynamicScoreEventValue();
         if (score != 0) {
             dynamicScore = score;
             dynamicScorePos = game.getPosition(game.getPlayer());

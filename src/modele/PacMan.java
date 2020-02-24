@@ -34,43 +34,50 @@ public class PacMan extends Observable implements Runnable {
 
     @Override
     public void run() {
+        long elaspedTime;
         while (!closeGameRequested) {
-            if (isGameStarted && !isGameFinished) {
-                isPlayerDead = grid.testCollision();
-                boolean isGameWinned = grid.isGameFinished();
-                if (isPlayerDead && grid.getLives() <= 0 || isGameWinned)
-                    isGameFinished = true;
-                else if (isPlayerDead) {
-                    isGameStarted = false;
-                    whenToRestart = System.currentTimeMillis() + RESTART_DELAY;
-                    grid.stopGame();
-                    grid.resetGhost();
-                    grid.setLives(grid.getLives() - 1);
-                }
-                if (isGameFinished) {
-                    grid.stopGame();
-                    grid.resetGhost();
-                }
-                if (isGameWinned) {
-                    grid.nextLevel();
-                    whenToRestart = System.currentTimeMillis() + RESTART_DELAY;
-                    isGameStarted = false;
-                    isGameFinished = false;
-                }
-                if (dynamicScore == 0)
-                    dynamicScore = grid.getDynamicScore();
-            }
-            if (nbUpdates % UPDATE_PER_FRAME == 0) {
-                setChanged();
-                notifyObservers();
-            }
+            elaspedTime = gameLogic();
             try {
                 nbUpdates++;
-                Thread.sleep(FRAME_DURATION / UPDATE_PER_FRAME);
+                Thread.sleep(Math.max(1, (FRAME_DURATION - elaspedTime) / UPDATE_PER_FRAME));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private long gameLogic() {
+        long startTime = System.currentTimeMillis();
+        if (isGameStarted && !isGameFinished) {
+            isPlayerDead = grid.testCollision();
+            boolean isGameWinned = grid.isGameFinished();
+            if (isPlayerDead && grid.getLives() <= 0 || isGameWinned)
+                isGameFinished = true;
+            else if (isPlayerDead) {
+                isGameStarted = false;
+                whenToRestart = System.currentTimeMillis() + RESTART_DELAY;
+                grid.stopGame();
+                grid.resetGhost();
+                grid.setLives(grid.getLives() - 1);
+            }
+            if (isGameFinished) {
+                grid.stopGame();
+                grid.resetGhost();
+            }
+            if (isGameWinned) {
+                grid.nextLevel();
+                whenToRestart = System.currentTimeMillis() + RESTART_DELAY;
+                isGameStarted = false;
+                isGameFinished = false;
+            }
+            if (dynamicScore == 0)
+                dynamicScore = grid.getDynamicScore();
+        }
+        if (nbUpdates % UPDATE_PER_FRAME == 0) {
+            setChanged();
+            notifyObservers();
+        }
+        return System.currentTimeMillis() - startTime;
     }
 
     public void setNextPlayerAction(Movement action) {
@@ -112,17 +119,7 @@ public class PacMan extends Observable implements Runnable {
     }
 
     public EntityGhost getGhost(GhostName name) {
-        switch (name) {
-            case BLINKY:
-                return grid.getBlinky();
-            case INKY:
-                return grid.getInky();
-            case PINKY:
-                return grid.getPinky();
-            case CLYDE:
-                return grid.getClyde();
-        }
-        return null;
+        return grid.getGhost(name);
     }
 
     public Movement getDirection(MoveableEntity entity) {
@@ -140,6 +137,7 @@ public class PacMan extends Observable implements Runnable {
     public StaticEntity getTileType(Point pos) {
         return grid.getTileType(pos);
     }
+
     public StaticEntity getTileType(Movement dir, Point pos) {
         return grid.getStaticEntity(dir, pos);
     }
@@ -175,7 +173,7 @@ public class PacMan extends Observable implements Runnable {
         closeGameRequested = true;
     }
 
-    public int hasDynamicScoreAppened() {
+    public int getDynamicScoreEventValue() {
         int temp = dynamicScore;
         dynamicScore = 0;
         return temp;

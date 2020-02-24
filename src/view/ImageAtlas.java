@@ -3,8 +3,6 @@ package view;
 
 import javafx.scene.image.Image;
 
-import java.io.File;
-
 public class ImageAtlas {
 
     private final Image[] frames;
