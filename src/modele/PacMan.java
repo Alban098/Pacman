@@ -13,9 +13,9 @@ public class PacMan extends Observable implements Runnable {
     public static final int FRIGHTENED_GHOST_UPDATE_INTERVAL = 210;
     public static final int EATEN_GHOST_UPDATE_INTERVAL = 75;
     public static final int PLAYER_UPDATE_INTERVAL = 175;
-    public static final int FRAME_DURATION = 20;
-    public static final int UPDATE_PER_FRAME = 5;
-    public static final int RESTART_DELAY = 2000;
+    public static final int FRAME_DURATION = 15;
+    public static final int UPDATE_PER_FRAME = 3;
+    public static final int RESTART_DELAY = 5600;
 
     private final Grid grid;
 
@@ -30,6 +30,7 @@ public class PacMan extends Observable implements Runnable {
 
     public PacMan(String map) {
         grid = new Grid(map);
+        whenToRestart = System.currentTimeMillis() + RESTART_DELAY - 1000;
     }
 
     @Override
@@ -91,6 +92,10 @@ public class PacMan extends Observable implements Runnable {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isGameStarted() {
         return isGameStarted;
+    }
+
+    public boolean canStart() {
+        return whenToRestart <= System.currentTimeMillis();
     }
 
     public int getLives() {
@@ -181,5 +186,33 @@ public class PacMan extends Observable implements Runnable {
 
     public int getLevel() {
         return grid.getLevel();
+    }
+
+    public boolean hasEatenGhost() {
+        return grid.hasEatenGhost();
+    }
+
+    public boolean hasEatenFruit() {
+        return grid.hasEatenFruit();
+    }
+
+    public boolean hasPlayerDied() {
+        return grid.hasPlayerDied();
+    }
+
+    public boolean hasExtraLife() {
+        return grid.hasExtraLife();
+    }
+
+    public boolean hasEatenGum() {
+        return grid.hasEatenGum();
+    }
+
+    public boolean areGhostFrightened() {
+        return grid.areGhostFrightened();
+    }
+
+    public boolean areGhostEaten() {
+        return grid.areGhostEaten();
     }
 }

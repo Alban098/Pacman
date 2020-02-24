@@ -42,6 +42,12 @@ public class Grid {
     private int lives = 3;
     private int dynamicScore = 0;
 
+    private boolean hasEatenGhost = false;
+    private boolean hasEatenFruit = false;
+    private boolean hasPlayerDied = false;
+    private boolean hasExtraLife = false;
+    private boolean hasEatenGum = false;
+
     private Point ghostHome;
     private Point ghostSpawn;
     private Point playerStartPos;
@@ -156,10 +162,44 @@ public class Grid {
         return nbGum == 0;
     }
 
+    public boolean hasEatenGhost() {
+        if (hasEatenGhost)
+            System.out.println(hasEatenGhost);
+        boolean tmp = hasEatenGhost;
+        hasEatenGhost = false;
+        return tmp;
+    }
+
+    public boolean hasEatenFruit() {
+        boolean tmp = hasEatenFruit;
+        hasEatenFruit = false;
+        return tmp;
+    }
+
+    public boolean hasPlayerDied() {
+        boolean tmp = hasPlayerDied;
+        hasPlayerDied = false;
+        return tmp;
+    }
+
+    public boolean hasExtraLife() {
+        boolean tmp = hasExtraLife;
+        hasExtraLife = false;
+        return tmp;
+    }
+
+    public boolean hasEatenGum() {
+        boolean tmp = hasEatenGum;
+        hasEatenGum = false;
+        return tmp;
+    }
+
     public boolean testCollision() {
         Point pos = entities.get(player);
-        if (levelScore < 1000 && levelScore + scoreMap.get(movementMap.get(pos)) >= 1000)
+        if (levelScore < 1000 && levelScore + scoreMap.get(movementMap.get(pos)) >= 1000) {
             lives++;
+            hasExtraLife = true;
+        }
         levelScore += scoreMap.get(movementMap.get(pos));
         totalScore += scoreMap.get(movementMap.get(pos));
         for (MoveableEntity e : entities.keySet()) {
@@ -171,7 +211,9 @@ public class Grid {
                         totalScore += 100*Math.pow(2, player.getEatenGhostMultiplier());
                         dynamicScore = (int) (100*Math.pow(2, player.getEatenGhostMultiplier()));
                         player.incrementEatenGhostMultiplier();
-                    } else if (((EntityGhost) e).getState() != GhostState.EATEN){
+                        hasEatenGhost = true;
+                    } else if (((EntityGhost) e).getState() != GhostState.EATEN) {
+                        hasPlayerDied = true;
                         return true;
                     }
                 }
@@ -180,8 +222,10 @@ public class Grid {
         if (isType(pos, StaticEntity.GUM)) {
             nbGum--;
             movementMap.replace(pos, StaticEntity.EMPTY);
+            hasEatenGum = true;
         } else if (isType(pos, StaticEntity.SUPER_GUM)) {
             nbGum--;
+            hasEatenGum = true;
             movementMap.replace(pos, StaticEntity.EMPTY);
             player.resetEatenGhostMultiplier();
             for (MoveableEntity e : entities.keySet()) {
@@ -193,6 +237,7 @@ public class Grid {
             levelScore += scoreMap.get(movementMap.get(pos));
             dynamicScore = -scoreMap.get(movementMap.get(pos));
             movementMap.replace(pos, StaticEntity.EMPTY);
+            hasEatenFruit = true;
         }
         if (nbGum == (int)(.9f * totalGum)) {
             spawnFruit();
@@ -418,5 +463,21 @@ public class Grid {
         int tmp = dynamicScore;
         dynamicScore = 0;
         return tmp;
+    }
+
+    public boolean areGhostFrightened() {
+        for (MoveableEntity e : entities.keySet()) {
+            if (e instanceof EntityGhost && ((EntityGhost) e).getState() == GhostState.FRIGHTENED)
+                return true;
+        }
+        return false;
+    }
+
+    public boolean areGhostEaten() {
+        for (MoveableEntity e : entities.keySet()) {
+            if (e instanceof EntityGhost && ((EntityGhost) e).getState() == GhostState.EATEN)
+                return true;
+        }
+        return false;
     }
 }
