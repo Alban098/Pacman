@@ -16,6 +16,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import modele.entities.EntityGhost;
+import modele.entities.EntityPlayer;
 import modele.entities.MoveableEntity;
 import javafx.application.Platform;
 import javafx.scene.canvas.GraphicsContext;
@@ -27,11 +28,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.scene.canvas.Canvas;
 
-/**
- *
- * @author frederic.armetta
- */
-public class SimpleVC extends Application {
+public class ViewController extends Application implements Observer {
 
     private static final byte MASK_WALL_RIGHT = 0b1000;
     private static final byte MASK_WALL_UP =    0b0100;
@@ -47,7 +44,7 @@ public class SimpleVC extends Application {
     Canvas background;
     Canvas gui;
 
-    PacMan game;
+    Game game;
     AudioController audioController;
 
     long whenToStopDeathAnim;
@@ -59,11 +56,22 @@ public class SimpleVC extends Application {
     int dynamicScore;
     Point dynamicScorePos;
 
+    private Runnable renderer;
+
     @Override
     public void start(Stage primaryStage) {
 
-        game = new PacMan("map.xml");
+        game = new Game("map.xml");
         audioController = new AudioController(game);
+
+        renderer = () -> {
+            primaryStage.setWidth(15*game.getSizeX() + 16);
+            primaryStage.setHeight(15*game.getSizeY() + 39);
+
+            drawBackground();
+            drawForeground();
+            drawGUI();
+        };
 
         backgroundTileMap = new HashMap<>();
         foregroundSpriteMap = new HashMap<>();
@@ -78,8 +86,10 @@ public class SimpleVC extends Application {
         root.getChildren().add(background);
         root.getChildren().add(foreground);
         root.getChildren().add(gui);
+
         Scene scene = new Scene(root, 15*game.getSizeX(), 15*game.getSizeY());
-        primaryStage.setTitle("Beta 1.5");
+
+        primaryStage.setTitle("Beta 1.6");
         primaryStage.setOnCloseRequest(we -> {
             game.requestClose();
             System.exit(0);
@@ -91,25 +101,11 @@ public class SimpleVC extends Application {
 
         loadSprites();
 
-        Observer o =  new Observer() {
-            private final Runnable renderer = () -> {
-                primaryStage.setWidth(15*game.getSizeX() + 16);
-                primaryStage.setHeight(15*game.getSizeY() + 39);
-                drawBackground();
-                drawForeground();
-                drawGUI();
-            };
-
-            @Override
-            public void update(Observable o, Object arg) {
-                Platform.runLater(renderer);
-            }
-        };
-
-        game.addObserver(o);
+        game.addObserver(this);
         new Thread(game).start();
+
         root.setOnKeyPressed(event -> {
-            if (!game.isGameStarted()) {
+            if (!game.isGameStarted() && !game.isPlayerDead()) {
                 if (game.startGame()) {
                     isDeathAnimPlaying = false;
                     isDeathAnimFinished = true;
@@ -268,6 +264,7 @@ public class SimpleVC extends Application {
         final GraphicsContext gc = foreground.getGraphicsContext2D();
         gc.clearRect(0, 0, foreground.getWidth(), foreground.getHeight());
         if (!game.isPlayerDead()) {
+            audioController.canPlayIntro(false);
             drawSprite(game.getGhost(GhostName.BLINKY), gc);
             drawSprite(game.getGhost(GhostName.INKY), gc);
             drawSprite(game.getGhost(GhostName.PINKY), gc);
@@ -287,7 +284,7 @@ public class SimpleVC extends Application {
                 gc.drawImage(foregroundSpriteMap.get(game.getPlayer()).getFrame(SpriteID.DEATH), 15 * pos.x, 15 * pos.y);
             } else {
                 game.resetPlayer();
-                audioController.canPlayIntro();
+                audioController.canPlayIntro(true);
                 isDeathAnimFinished = true;
                 if (!(game.isGameFinished() && game.isPlayerDead())) {
                     foregroundSpriteMap.get(game.getPlayer()).getFrame(SpriteID.UP);
@@ -310,10 +307,14 @@ public class SimpleVC extends Application {
         gui.setHeight(15*game.getSizeY());
         final GraphicsContext gc = gui.getGraphicsContext2D();
         gc.clearRect(0, 0, gui.getWidth(), gui.getHeight());
+        gc.setFill(Color.gray(.2f));
+        gc.fillRect(0, 0, gui.getWidth(), 31);
 
         gc.setFill(Color.WHITE);
         gc.fillText("Level", 15, 13);
         gc.fillText("Score", 15, 13+15);
+
+
         for (int i = (int) Math.log10(game.getTotalScore() + 1); i >= 0; i--) {
             int digit = (int) (game.getTotalScore() / Math.pow(10, (int)Math.log10(game.getTotalScore()) -  i)) % 10;
             drawDigit(digit, new Point(9*(i + 5) + 3, 20), gc);
@@ -326,11 +327,11 @@ public class SimpleVC extends Application {
             gc.drawImage(GUITileMap.get(GUIElement.LIVE), gui.getWidth() - 15*(i+2), 15);
         }
 
-        if (!game.isGameStarted() && isDeathAnimFinished) {
-            gc.drawImage(GUITileMap.get(GUIElement.READY), 15*(game.getSizeX()/2 - 2), 15*(game.getSizeY()/2 + 1), 5*15, 15);
+        if (!game.isGameStarted() && isDeathAnimFinished && !game.isGameFinished()) {
+            gc.drawImage(GUITileMap.get(GUIElement.READY), 15*(game.getSizeX()/2 - 2), 15*(game.getSizeY()/2 + 2), 5*15, 15);
         }
         if (game.isGameFinished() && game.isPlayerDead() && isDeathAnimFinished) {
-            gc.drawImage(GUITileMap.get(GUIElement.GAME_OVER), 15*(game.getSizeX()/2 - 3), 15*(game.getSizeY()/2 + 1), 7*15, 15);
+            gc.drawImage(GUITileMap.get(GUIElement.GAME_OVER), 15*(game.getSizeX()/2 - 3), 15*(game.getSizeY()/2 + 2), 7*15, 15);
         }
 
         int score = game.getDynamicScoreEventValue();
@@ -386,6 +387,8 @@ public class SimpleVC extends Application {
             }
         }
     }
+
+
 
     private void drawDigit(int digit, Point pos, GraphicsContext gc) {
         switch (digit) {
@@ -500,13 +503,19 @@ public class SimpleVC extends Application {
         }
     }
 
-    public byte getWallMask(Point pos) {
+    private byte getWallMask(Point pos) {
         byte mask = 0b0000;
         mask |= (game.getTileType(Movement.UP, pos) == StaticEntity.WALL ? MASK_WALL_UP : 0);
         mask |= (game.getTileType(Movement.DOWN, pos) == StaticEntity.WALL ? MASK_WALL_DOWN : 0);
         mask |= (game.getTileType(Movement.RIGHT, pos) == StaticEntity.WALL ? MASK_WALL_RIGHT : 0);
         mask |= (game.getTileType(Movement.LEFT, pos) == StaticEntity.WALL ? MASK_WALL_LEFT : 0);
         return mask;
+    }
+
+
+    @Override
+    public void update(Observable o, Object arg) {
+        Platform.runLater(renderer);
     }
 
     /**

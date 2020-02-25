@@ -5,7 +5,7 @@ import modele.logic.TargetTileFinder;
 
 public class EntityGhost extends MoveableEntity implements Runnable {
 
-    private static final long[] MODE_SWITCH_ARRAY = {7000, 20000, 7000, 20000, 5000, 20000, 5000, -1};
+    private static final long[] MODE_SWITCH_ARRAY = {9000, 20000, 7000, 20000, 5000, 20000, 5000, -1};
 
     private final TargetTileFinder pathFinding;
     private GhostState state;
@@ -31,7 +31,7 @@ public class EntityGhost extends MoveableEntity implements Runnable {
 
     public synchronized void setState(GhostState state) {
         if (state == GhostState.FRIGHTENED) {
-            whenToGetOutOfFrightenedState = System.currentTimeMillis() + 10000;
+            whenToGetOutOfFrightenedState = System.currentTimeMillis() + Game.FRIGHTENED_DURATION;
         }
         if (state == GhostState.FRIGHTENED || state == GhostState.CHASE || state == GhostState.SCATTER)
             switchDirection();
@@ -100,13 +100,13 @@ public class EntityGhost extends MoveableEntity implements Runnable {
                 int sleepTime;
                 switch (state) {
                     case EATEN:
-                        sleepTime = PacMan.EATEN_GHOST_UPDATE_INTERVAL;
+                        sleepTime = Game.EATEN_GHOST_UPDATE_INTERVAL;
                         break;
                     case FRIGHTENED:
-                        sleepTime = PacMan.FRIGHTENED_GHOST_UPDATE_INTERVAL;
+                        sleepTime = Game.FRIGHTENED_GHOST_UPDATE_INTERVAL;
                         break;
                     default:
-                        sleepTime = PacMan.GHOST_UPDATE_INTERVAL;
+                        sleepTime = Game.GHOST_UPDATE_INTERVAL;
                         break;
                 }
                 Thread.sleep(sleepTime);

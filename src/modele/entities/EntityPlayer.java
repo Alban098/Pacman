@@ -2,11 +2,12 @@ package modele.entities;
 
 import modele.Grid;
 import modele.Movement;
-import modele.PacMan;
+import modele.Game;
 
 public class EntityPlayer extends MoveableEntity implements Runnable {
 
     private int eatenGhostMultiplier = 1;
+    private boolean isDead = false;
 
     public EntityPlayer(Grid grid) {
         super(grid);
@@ -44,7 +45,7 @@ public class EntityPlayer extends MoveableEntity implements Runnable {
         while (running) {
             update();
             try {
-                Thread.sleep(PacMan.PLAYER_UPDATE_INTERVAL);
+                Thread.sleep(Game.PLAYER_UPDATE_INTERVAL);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -62,5 +63,13 @@ public class EntityPlayer extends MoveableEntity implements Runnable {
         eatenGhostMultiplier = 1;
         currentDirection = Movement.NONE;
         requestedAction = Movement.NONE;
+    }
+
+    public boolean isDead() {
+        return isDead;
+    }
+
+    public void setDead(boolean dead) {
+        isDead = dead;
     }
 }

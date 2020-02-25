@@ -1,11 +1,6 @@
 package view;
 
-import javafx.application.Platform;
-import javafx.concurrent.Worker;
-import modele.PacMan;
-import modele.StaticEntity;
-import modele.entities.EntityPlayer;
-import modele.entities.MoveableEntity;
+import modele.Game;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -15,13 +10,14 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
-public class AudioController {
+public class AudioController implements Observer{
 
-    private PacMan game;
+    private Game game;
     private Map<AudioID, AudioChannel> audioChannels;
     private boolean canPlayIntro = true;
+    private boolean canPlayEnd = true;
 
-    public AudioController(PacMan instance) {
+    public AudioController(Game instance) {
         audioChannels = new HashMap<>();
 
         addChannel(AudioID.DEATH, getClass().getResource("../resources/audio/death.wav").getFile(), false);
@@ -33,49 +29,14 @@ public class AudioController {
         addChannel(AudioID.GHOST_HOME, getClass().getResource("../resources/audio/ghost-home.wav").getFile(), false);
         addChannel(AudioID.GHOST_FRIGHTENED, getClass().getResource("../resources/audio/ghost-frightened.wav").getFile(), false);
         addChannel(AudioID.INTRO, getClass().getResource("../resources/audio/ready.wav").getFile(), false);
+        addChannel(AudioID.END, getClass().getResource("../resources/audio/end.wav").getFile(), false);
 
         this.game = instance;
-        Observer o = new Observer() {
-            @Override
-            public void update(Observable o, Object arg) {
-                if (game.hasPlayerDied())
-                    playChannel(AudioID.DEATH);
-                if (game.hasEatenFruit())
-                    playChannel(AudioID.EATING_FRUIT);
-                if (game.hasEatenGhost())
-                    playChannel(AudioID.EATING_GHOST);
-                if (game.hasExtraLife())
-                    playChannel(AudioID.EXTRA_LIFE);
-                if (game.isGameStarted()) {
-                    if (game.areGhostEaten())
-                        loopChannel(AudioID.GHOST_HOME);
-                    else
-                        pauseChannel(AudioID.GHOST_HOME);
-                    if (game.areGhostFrightened()) {
-                        pauseChannel(AudioID.GHOST_SIREN);
-                        loopChannel(AudioID.GHOST_FRIGHTENED);
-                    } else {
-                        pauseChannel(AudioID.GHOST_FRIGHTENED);
-                        loopChannel(AudioID.GHOST_SIREN);
-                    }
-                    if (game.hasEatenGum())
-                        playChannel(AudioID.EATING);
-                } else {
-                    pauseChannel(AudioID.GHOST_HOME);
-                    pauseChannel(AudioID.GHOST_SIREN);
-                    pauseChannel(AudioID.GHOST_FRIGHTENED);
-                    if (!game.canStart() && game.getLives() >= 0 && canPlayIntro) {
-                        playChannel(AudioID.INTRO);
-                        canPlayIntro = false;
-                    }
-                }
-            }
-        };
-        game.addObserver(o);
+        game.addObserver(this);
     }
 
-    public void canPlayIntro() {
-        this.canPlayIntro = true;
+    public void canPlayIntro(boolean can) {
+        this.canPlayIntro = can;
     }
 
     public void addChannel(AudioID id, String file, boolean canRestart) {
@@ -97,5 +58,47 @@ public class AudioController {
 
     public void pauseChannel(AudioID id) {
         audioChannels.get(id).pause();
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        if (game.hasPlayerDied())
+            playChannel(AudioID.DEATH);
+        if (game.hasEatenFruit())
+            playChannel(AudioID.EATING_FRUIT);
+        if (game.hasEatenGhost())
+            playChannel(AudioID.EATING_GHOST);
+        if (game.hasExtraLife())
+            playChannel(AudioID.EXTRA_LIFE);
+        if (game.isGameStarted()) {
+            if (game.areGhostEaten())
+                loopChannel(AudioID.GHOST_HOME);
+            else
+                pauseChannel(AudioID.GHOST_HOME);
+            if (game.areGhostFrightened()) {
+                pauseChannel(AudioID.GHOST_SIREN);
+                loopChannel(AudioID.GHOST_FRIGHTENED);
+            } else {
+                pauseChannel(AudioID.GHOST_FRIGHTENED);
+                loopChannel(AudioID.GHOST_SIREN);
+            }
+            if (game.hasEatenGum())
+                playChannel(AudioID.EATING);
+        } else {
+            pauseChannel(AudioID.GHOST_HOME);
+            pauseChannel(AudioID.GHOST_SIREN);
+            pauseChannel(AudioID.GHOST_FRIGHTENED);
+            if (!game.canStart() && game.getLives() >= 0 && canPlayIntro) {
+                playChannel(AudioID.INTRO);
+                canPlayIntro = false;
+            }
+        }
+        if (game.isGameFinished() && canPlayIntro && canPlayEnd) {
+            loopChannel(AudioID.END);
+            pauseChannel(AudioID.GHOST_HOME);
+            pauseChannel(AudioID.GHOST_SIREN);
+            pauseChannel(AudioID.GHOST_FRIGHTENED);
+            canPlayEnd = false;
+        }
     }
 }

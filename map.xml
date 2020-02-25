@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <maps>
-    <map default="1" start="1" end="1" sizeX="21" sizeY="21">
-        <row id="0">0WWWWWWWWWWWWWWWWWWW0</row>
-        <row id="1">0W11111111W11111111W0</row>
-        <row id="2">0W2WW1WWW1W1WWW1WW2W0</row>
-        <row id="3">0W11111111111111111W0</row>
-        <row id="4">0W1WW1W1WWWWW1W1WW1W0</row>
-        <row id="5">0W1111W111W111W1111W0</row>
-        <row id="6">0WWWW1WWW1W1WWW1WWWW0</row>
-        <row id="7">0000W1W000G000W1W0000</row>
-        <row id="8">WWWWW1W0WWWWW0W1WWWWW</row>
-        <row id="9">00000100W0S0W00100000</row>
-        <row id="10">WWWWW1W0WWWWW0W1WWWWW</row>
-        <row id="11">0000W1W000I000W1W0000</row>
-        <row id="12">0WWWW1W0WWWWW0W1WWWW0</row>
-        <row id="13">0W11111111W11111111W0</row>
-        <row id="14">0W1WW1WWW1W1WWW1WW1W0</row>
-        <row id="15">0W21W11111P11111W12W0</row>
-        <row id="16">0WW1W1W1WWWWW1W1W1WW0</row>
-        <row id="17">0W1111W111W111W1111W0</row>
-        <row id="18">0W1WWWWWW1W1WWWWWW1W0</row>
-        <row id="19">0W11111111111111111W0</row>
-        <row id="20">0WWWWWWWWWWWWWWWWWWW0</row>
+    <map default="1" start="1" end="1" sizeX="21" sizeY="23">
+        <row id="0">00000000W0W0W00000000</row>
+        <row id="1">0WWWWWWWW0W0WWWWWWWW0</row>
+        <row id="2">0W11111111W11111111W0</row>
+        <row id="3">0W2WW1WWW1W1WWW1WW2W0</row>
+        <row id="4">0W11111111111111111W0</row>
+        <row id="5">0W1WW1W1WWWWW1W1WW1W0</row>
+        <row id="6">0W1111W111W111W1111W0</row>
+        <row id="7">0WWWW1WWW1W1WWW1WWWW0</row>
+        <row id="8">0000W1W000G000W1W0000</row>
+        <row id="9">WWWWW1W0WWWWW0W1WWWWW</row>
+        <row id="10">00000100W0S0W00100000</row>
+        <row id="11">WWWWW1W0WWWWW0W1WWWWW</row>
+        <row id="12">0000W1W000I000W1W0000</row>
+        <row id="13">0WWWW1W0WWWWW0W1WWWW0</row>
+        <row id="14">0W11111111W11111111W0</row>
+        <row id="15">0W1WW1WWW1W1WWW1WW1W0</row>
+        <row id="16">0W21W11111P11111W12W0</row>
+        <row id="17">0WW1W1W1WWWWW1W1W1WW0</row>
+        <row id="18">0W1111W111W111W1111W0</row>
+        <row id="19">0W1WWWWWW1W1WWWWWW1W0</row>
+        <row id="20">0W11111111111111111W0</row>
+        <row id="21">0WWWWWWWW0W0WWWWWWWW0</row>
+        <row id="22">00000000W0W0W00000000</row>
     </map>
     <map default="1" start="2" end="3" sizeX="21" sizeY="23">
         <row id="0">0WWWWWWWWWWWWWWWWWWW0</row>
