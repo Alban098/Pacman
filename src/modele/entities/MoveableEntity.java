@@ -1,7 +1,9 @@
 package modele.entities;
 
 import modele.Grid;
-import modele.Movement;
+import modele.enums.Movement;
+
+import java.awt.*;
 
 public abstract class MoveableEntity implements Runnable{
 
@@ -9,6 +11,7 @@ public abstract class MoveableEntity implements Runnable{
     protected Movement currentDirection;
     protected Movement requestedAction;
     protected boolean running = true;
+    private Point spawnPoint;
 
     protected long lastActionTime = 0;
 
@@ -30,6 +33,14 @@ public abstract class MoveableEntity implements Runnable{
 
     public synchronized void reset() {
         lastActionTime = 0;
+    }
+
+    public Point getSpawnPoint() {
+        return spawnPoint;
+    }
+
+    public void setSpawnPoint(Point spawnPoint) {
+        this.spawnPoint = spawnPoint;
     }
 
     protected abstract void update();

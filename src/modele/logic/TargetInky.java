@@ -3,18 +3,14 @@ package modele.logic;
 import modele.Grid;
 import modele.entities.EntityGhost;
 import modele.entities.EntityPlayer;
-import modele.GhostState;
-import modele.Movement;
+import modele.entities.MoveableEntity;
+import modele.enums.GhostName;
+import modele.enums.GhostState;
+import modele.enums.Movement;
 
 import java.awt.*;
 
 public class TargetInky extends TargetTileFinder {
-
-    private final EntityGhost blinky;
-
-    public TargetInky(EntityGhost blinky) {
-        this.blinky = blinky;
-    }
 
     @Override
     public Movement getDirection(Grid grid, EntityGhost ghost, EntityPlayer player) {
@@ -42,7 +38,10 @@ public class TargetInky extends TargetTileFinder {
                         target.x++;
                         break;
                 }
-                Point blinkyPos = grid.getPosition(blinky);
+                Point blinkyPos = new Point(0, 0);
+                for (MoveableEntity e : grid.getEntities())
+                    if (e instanceof EntityGhost && ((EntityGhost) e).getName() == GhostName.BLINKY)
+                        blinkyPos = grid.getPosition(e);
                 target.x += target.x - blinkyPos.x;
                 target.y += target.y - blinkyPos.y;
                 return getBestDirToTarget(grid, ghost, target);

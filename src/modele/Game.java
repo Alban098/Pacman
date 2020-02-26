@@ -3,6 +3,10 @@ package modele;
 import modele.entities.EntityGhost;
 import modele.entities.EntityPlayer;
 import modele.entities.MoveableEntity;
+import modele.enums.GhostName;
+import modele.enums.GhostState;
+import modele.enums.Movement;
+import modele.entities.StaticEntity;
 
 import java.awt.*;
 import java.util.Observable;
@@ -23,14 +27,21 @@ public class Game extends Observable implements Runnable {
 
     private boolean isGameFinished = false;
     private boolean isGameStarted = false;
-    private int dynamicScore = 0;
+    protected int totalScore = 0;
+    private int level = 0;
+    protected int levelScore = 0;
+    protected int lastLevelScore = 0;
+    protected int dynamicScore = 0;
 
     private long whenToRestart;
     private boolean closeGameRequested = false;
     private long nbUpdates = 0;
 
+    private CollisionManager collisionManager;
+
     public Game(String map) {
-        grid = new Grid(map);
+        grid = new Grid(map, GhostName.BLINKY, GhostName.PINKY, GhostName.INKY, GhostName.CLYDE);
+        collisionManager = new CollisionManager(grid, this);
         whenToRestart = System.currentTimeMillis() + RESTART_DELAY - 1000;
     }
 
@@ -51,30 +62,28 @@ public class Game extends Observable implements Runnable {
     private long gameLogic() {
         long startTime = System.currentTimeMillis();
         if (isGameStarted && !isGameFinished) {
-            grid.testCollision();
-            boolean isGameWinned = grid.isGameFinished();
-            if (getPlayer().isDead() && grid.getLives() <= 0 || isGameWinned) {
+            collisionManager.testCollision();
+            boolean isGameWinned = allGumEaten();
+            if (getPlayer().isDead() && getPlayer().getLives() <= 0 || isGameWinned) {
                 isGameFinished = true;
                 isGameStarted = false;
-            } else if (getPlayer().isDead()) {
+            } if (getPlayer().isDead()) {
                 isGameStarted = false;
                 whenToRestart = System.currentTimeMillis() + RESTART_DELAY;
                 grid.stopGame();
-                grid.resetGhost();
-                grid.setLives(grid.getLives() - 1);
+                resetGhosts();
             }
             if (isGameFinished) {
                 grid.stopGame();
-                grid.resetGhost();
+                resetGhosts();
             }
             if (isGameWinned) {
-                grid.restart();
+                grid.restart(++level);
+                collisionManager.resetTotalGum();
                 whenToRestart = System.currentTimeMillis() + RESTART_DELAY;
                 isGameStarted = false;
                 isGameFinished = false;
             }
-            if (dynamicScore == 0)
-                dynamicScore = grid.getDynamicScore();
         }
         if (nbUpdates % UPDATE_PER_FRAME == 0) {
             setChanged();
@@ -95,7 +104,7 @@ public class Game extends Observable implements Runnable {
     }
 
     public void setNextPlayerAction(Movement action) {
-        grid.getPlayer().setAction(action);
+        getPlayer().setAction(action);
     }
 
     public float getAnimationPercent(MoveableEntity entity) {
@@ -119,7 +128,9 @@ public class Game extends Observable implements Runnable {
         return entity.getCurrentDirection();
     }
 
-
+    public boolean isGameFinished() {
+        return isGameFinished;
+    }
 
     public boolean isGameStarted() {
         return isGameStarted;
@@ -133,8 +144,8 @@ public class Game extends Observable implements Runnable {
         return getPlayer().isDead();
     }
 
-    public boolean isGameFinished() {
-        return isGameFinished;
+    private boolean allGumEaten() {
+        return grid.getStaticEntityCount(StaticEntity.SUPER_GUM) + grid.getStaticEntityCount(StaticEntity.GUM) == 0;
     }
 
     public synchronized void requestClose() {
@@ -148,9 +159,8 @@ public class Game extends Observable implements Runnable {
     }
 
     public int getLives() {
-        return grid.getLives();
+        return getPlayer().getLives();
     }
-
 
 
     public Point getPosition(MoveableEntity entity) {
@@ -158,11 +168,21 @@ public class Game extends Observable implements Runnable {
     }
 
     public EntityPlayer getPlayer() {
-        return grid.getPlayer();
+        for (MoveableEntity e : grid.getEntities()) {
+            if (e instanceof EntityPlayer) {
+                return (EntityPlayer) e;
+            }
+        }
+        return null;
     }
 
     public EntityGhost getGhost(GhostName name) {
-        return grid.getGhost(name);
+        for (MoveableEntity e : grid.getEntities()) {
+            if (e instanceof EntityGhost && ((EntityGhost) e).getName() == name) {
+                return (EntityGhost) e;
+            }
+        }
+        return null;
     }
 
     public int getSizeX() {
@@ -182,42 +202,62 @@ public class Game extends Observable implements Runnable {
     }
 
     public int getTotalScore() {
-        return grid.getTotalScore();
+        return totalScore;
     }
 
     public void resetPlayer() {
-        grid.resetPlayer();
+        for (MoveableEntity e : grid.getEntities()) {
+            if (e instanceof EntityPlayer) {
+                grid.resetEntity(e);
+            }
+        }
+    }
+
+    public void resetGhosts() {
+        for (MoveableEntity e : grid.getEntities()) {
+            if (e instanceof EntityGhost) {
+                grid.resetEntity(e);
+            }
+        }
     }
 
     public int getLevel() {
-        return grid.getLevel();
+        return level;
     }
 
     public boolean hasEatenGhost() {
-        return grid.hasEatenGhost();
+        return getPlayer().hasEatenGhost();
     }
 
     public boolean hasEatenFruit() {
-        return grid.hasEatenFruit();
+        return getPlayer().hasEatenFruit();
     }
 
     public boolean hasPlayerDied() {
-        return grid.hasPlayerDied();
+        return getPlayer().hasDied();
     }
 
     public boolean hasExtraLife() {
-        return grid.hasExtraLife();
+        return getPlayer().hasExtraLife();
     }
 
     public boolean hasEatenGum() {
-        return grid.hasEatenGum();
+        return getPlayer().hasEatenGum();
     }
 
     public boolean areGhostFrightened() {
-        return grid.areGhostFrightened();
+        for (MoveableEntity e : grid.getEntities()) {
+            if (e instanceof EntityGhost && ((EntityGhost) e).getState() == GhostState.FRIGHTENED)
+                return true;
+        }
+        return false;
     }
 
     public boolean areGhostEaten() {
-        return grid.areGhostEaten();
+        for (MoveableEntity e : grid.getEntities()) {
+            if (e instanceof EntityGhost && ((EntityGhost) e).getState() == GhostState.EATEN)
+                return true;
+        }
+        return false;
     }
 }

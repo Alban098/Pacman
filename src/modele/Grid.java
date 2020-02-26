@@ -1,10 +1,11 @@
 package modele;
 
 import modele.entities.*;
-import modele.logic.TargetBlinky;
-import modele.logic.TargetClyde;
-import modele.logic.TargetInky;
-import modele.logic.TargetPinky;
+import modele.enums.GhostName;
+import modele.enums.GhostState;
+import modele.enums.Movement;
+import modele.entities.StaticEntity;
+import modele.logic.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -15,86 +16,51 @@ import java.awt.*;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class Grid {
-
-    private static Map<StaticEntity, Integer> scoreMap;
 
     private int sizeX;
     private int sizeY;
     private final String map;
 
-    private int totalScore = 0;
-    private int level = 0;
-    private int levelScore = 0;
-    private int lastLevelScore = 0;
-    private int lives = 0;
-    private int dynamicScore = 0;
-
-    private boolean hasEatenGhost = false;
-    private boolean hasEatenFruit = false;
-    private boolean hasPlayerDied = false;
-    private boolean hasExtraLife = false;
-    private boolean hasEatenGum = false;
-
-    private Point ghostHome;
-    private Point ghostSpawn;
-    private Point playerStartPos;
-    private Point itemSpawn;
-
-    private final EntityPlayer player;
-    private final EntityGhost blinky;
-    private final EntityGhost pinky;
-    private final EntityGhost inky;
-    private final EntityGhost clyde;
-
     private Map<MoveableEntity, Point> entities;
+    private Map<StaticEntity, Integer> staticEntitiesCount;
     private Map<Point, StaticEntity> movementMap;
     private Map<MoveableEntity, Thread> threads;
 
-    private int nbGum = 0;
-    private int totalGum = 0;
-
-    public Grid(String map) {
+    public Grid(String map, GhostName ... names) {
         this.map = map;
 
         threads = new HashMap<>();
-
-        scoreMap = new HashMap<>();
-        scoreMap.put(StaticEntity.WALL, 0);
-        scoreMap.put(StaticEntity.EMPTY, 0);
-        scoreMap.put(StaticEntity.GUM, 10);
-        scoreMap.put(StaticEntity.SUPER_GUM, 50);
-        scoreMap.put(StaticEntity.CHERRY, 100);
-        scoreMap.put(StaticEntity.STRAWBERRY, 300);
-        scoreMap.put(StaticEntity.ORANGE, 500);
-        scoreMap.put(StaticEntity.APPLE, 700);
-        scoreMap.put(StaticEntity.MELON, 1000);
-        scoreMap.put(StaticEntity.GALAXIAN_BOSS, 2000);
-        scoreMap.put(StaticEntity.BELL, 3000);
-        scoreMap.put(StaticEntity.KEY, 5000);
-
-        player = new EntityPlayer(this);
-        blinky = new EntityGhost(new TargetBlinky(), this, 0);
-        inky = new EntityGhost(new TargetInky(blinky), this, 2500);
-        pinky = new EntityGhost(new TargetPinky(), this, 5000);
-        clyde = new EntityGhost(new TargetClyde(), this, 7500);
-
-        init();
-    }
-
-    private void init() {
-        level++;
-        levelScore = 0;
-        nbGum = 0;
-
         entities = new HashMap<>();
         movementMap = new HashMap<>();
+        staticEntitiesCount = new HashMap<>();
 
-        ghostHome = new Point(1, 1);
-        ghostSpawn = new Point(1, 1);
-        itemSpawn = new Point(1, 1);
-        playerStartPos = new Point(1, 1);
+        entities.put(new EntityPlayer(this), null);
+        int i = 0;
+        for (GhostName name : names) {
+            entities.put(new EntityGhost(TargetTileFinder.getTargetFinder(name), this, 2000*i, name), null);
+            i++;
+        }
+
+        init(1);
+    }
+
+    private void init(int level) {
+
+        staticEntitiesCount.put(StaticEntity.SUPER_GUM, 0);
+        staticEntitiesCount.put(StaticEntity.GUM, 0);
+        staticEntitiesCount.put(StaticEntity.EMPTY, 0);
+        staticEntitiesCount.put(StaticEntity.WALL, 0);
+        staticEntitiesCount.put(StaticEntity.CHERRY, 0);
+        staticEntitiesCount.put(StaticEntity.STRAWBERRY, 0);
+        staticEntitiesCount.put(StaticEntity.ORANGE, 0);
+        staticEntitiesCount.put(StaticEntity.APPLE, 0);
+        staticEntitiesCount.put(StaticEntity.MELON, 0);
+        staticEntitiesCount.put(StaticEntity.GALAXIAN_BOSS, 0);
+        staticEntitiesCount.put(StaticEntity.BELL, 0);
+        staticEntitiesCount.put(StaticEntity.KEY, 0);
 
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -130,13 +96,8 @@ public class Grid {
             System.exit(-1);
         }
 
-        entities.put(player, playerStartPos);
-        entities.put(blinky, ghostSpawn);
-        entities.put(clyde, ghostSpawn);
-        entities.put(pinky, ghostSpawn);
-        entities.put(inky, ghostSpawn);
-
         for (MoveableEntity e : entities.keySet()) {
+            entities.replace(e, e.getSpawnPoint());
             e.reset();
         }
     }
@@ -157,28 +118,54 @@ public class Grid {
         for (String line : mapAsString) {
             rowIndex = 0;
             for (char c : line.toCharArray()) {
-                if (c == 'W')
+                if (c == 'W') {
                     movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.WALL);
-                else if (c == '0')
+                    int count = staticEntitiesCount.get(StaticEntity.WALL);
+                    staticEntitiesCount.replace(StaticEntity.WALL, count + 1);
+                } else if (c == '0') {
                     movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                else if (c == '1') {
+                    int count = staticEntitiesCount.get(StaticEntity.EMPTY);
+                    staticEntitiesCount.replace(StaticEntity.EMPTY, count + 1);
+                } else if (c == '1') {
                     movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.GUM);
-                    nbGum++;
+                    int count = staticEntitiesCount.get(StaticEntity.GUM);
+                    staticEntitiesCount.replace(StaticEntity.GUM, count + 1);
                 } else if (c == '2') {
                     movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.SUPER_GUM);
-                    nbGum++;
+                    int count = staticEntitiesCount.get(StaticEntity.SUPER_GUM);
+                    staticEntitiesCount.replace(StaticEntity.SUPER_GUM, count + 1);
+                } else if (c == 'A') {
+                    movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.GATE);
+                    int count = staticEntitiesCount.get(StaticEntity.SUPER_GUM);
+                    staticEntitiesCount.replace(StaticEntity.SUPER_GUM, count + 1);
                 } else if (c == 'G') {
-                    ghostHome = new Point(rowIndex, lineIndex);
+                    for (MoveableEntity e : entities.keySet())
+                        if (e instanceof EntityGhost)
+                            ((EntityGhost) e).setStartingPoint(new Point(rowIndex, lineIndex));
                     movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
+                    int count = staticEntitiesCount.get(StaticEntity.EMPTY);
+                    staticEntitiesCount.replace(StaticEntity.EMPTY, count + 1);
                 } else if (c == 'S') {
-                    ghostSpawn = new Point(rowIndex, lineIndex);
+                    for (MoveableEntity e : entities.keySet())
+                        if (e instanceof EntityGhost)
+                            e.setSpawnPoint(new Point(rowIndex, lineIndex));
                     movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
+                    int count = staticEntitiesCount.get(StaticEntity.EMPTY);
+                    staticEntitiesCount.replace(StaticEntity.EMPTY, count + 1);
                 } else if (c == 'P') {
-                    playerStartPos = new Point(rowIndex, lineIndex);
+                    for (MoveableEntity e : entities.keySet())
+                        if (e instanceof EntityPlayer)
+                            e.setSpawnPoint(new Point(rowIndex, lineIndex));
                     movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
+                    int count = staticEntitiesCount.get(StaticEntity.EMPTY);
+                    staticEntitiesCount.replace(StaticEntity.EMPTY, count + 1);
                 } else if (c == 'I') {
-                    itemSpawn = new Point(rowIndex, lineIndex);
+                    FruitSpawner fs = new FruitSpawner(this);
+                    fs.setSpawnPoint(new Point(rowIndex, lineIndex));
+                    entities.put(fs, null);
                     movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
+                    int count = staticEntitiesCount.get(StaticEntity.EMPTY);
+                    staticEntitiesCount.replace(StaticEntity.EMPTY, count + 1);
                 }
                 rowIndex++;
             }
@@ -188,40 +175,15 @@ public class Grid {
             movementMap.put(new Point(i, 0), StaticEntity.EMPTY);
             movementMap.put(new Point(i, 1), StaticEntity.EMPTY);
         }
-        totalGum = nbGum;
     }
 
-    private void spawnFruit() {
-        if (level <= 2)
-            movementMap.put(itemSpawn, StaticEntity.CHERRY);
-        else if (level <= 4)
-            movementMap.put(itemSpawn, StaticEntity.STRAWBERRY);
-        else if (level <= 6)
-            movementMap.put(itemSpawn, StaticEntity.ORANGE);
-        else if (level <= 8)
-            movementMap.put(itemSpawn, StaticEntity.APPLE);
-        else if (level <= 10)
-            movementMap.put(itemSpawn, StaticEntity.MELON);
-        else if (level <= 12)
-            movementMap.put(itemSpawn, StaticEntity.GALAXIAN_BOSS);
-        else if (level <= 14)
-            movementMap.put(itemSpawn, StaticEntity.BELL);
-        else
-            movementMap.put(itemSpawn, StaticEntity.KEY);
-    }
-
-
-    public void restart() {
-        init();
+    public void restart(int level) {
+        init(level);
     }
 
     public void startEntities() {
-        threads.put(player, new Thread(player));
-        threads.put(blinky, new Thread(blinky));
-        threads.put(pinky, new Thread(pinky));
-        threads.put(inky, new Thread(inky));
-        threads.put(clyde, new Thread(clyde));
-        for (MoveableEntity e : threads.keySet()) {
+        for (MoveableEntity e : entities.keySet()) {
+            threads.put(e, new Thread(e));
             threads.get(e).start();
         }
     }
@@ -229,78 +191,14 @@ public class Grid {
     public void stopGame() {
         for (MoveableEntity e : entities.keySet()) {
             e.kill();
-            e.reset();
         }
     }
 
-    public void resetPlayer() {
-        entities.replace(player, playerStartPos);
-        player.reset();
+    public void resetEntity(MoveableEntity entity) {
+        entities.replace(entity, entity.getSpawnPoint());
+        entity.reset();
     }
 
-    public void resetGhost() {
-        for (MoveableEntity e : entities.keySet()) {
-            if (e instanceof EntityGhost) {
-                entities.replace(e, ghostSpawn);
-                e.reset();
-            }
-        }
-    }
-
-
-
-    public boolean testCollision() {
-        Point pos = entities.get(player);
-        levelScore += scoreMap.get(movementMap.get(pos));
-        totalScore += scoreMap.get(movementMap.get(pos));
-        for (MoveableEntity e : entities.keySet()) {
-            if (e instanceof EntityGhost) {
-                if (getPosition(e).equals(getPosition(player))) {
-                    if (((EntityGhost) e).getState() == GhostState.FRIGHTENED) {
-                        ((EntityGhost) e).setState(GhostState.EATEN);
-                        levelScore += 100*Math.pow(2, player.getEatenGhostMultiplier());
-                        totalScore += 100*Math.pow(2, player.getEatenGhostMultiplier());
-                        dynamicScore = (int) (100*Math.pow(2, player.getEatenGhostMultiplier()));
-                        player.incrementEatenGhostMultiplier();
-                        hasEatenGhost = true;
-                    } else if (((EntityGhost) e).getState() != GhostState.EATEN) {
-                        hasPlayerDied = true;
-                        player.setDead(true);
-                        return true;
-                    }
-                }
-            }
-        }
-        if (isType(pos, StaticEntity.GUM)) {
-            nbGum--;
-            movementMap.replace(pos, StaticEntity.EMPTY);
-            hasEatenGum = true;
-        } else if (isType(pos, StaticEntity.SUPER_GUM)) {
-            nbGum--;
-            hasEatenGum = true;
-            movementMap.replace(pos, StaticEntity.EMPTY);
-            player.resetEatenGhostMultiplier();
-            for (MoveableEntity e : entities.keySet()) {
-                if (e instanceof EntityGhost && ((EntityGhost) e).getState() != GhostState.EATEN && ((EntityGhost) e).getState() != GhostState.STILL)
-                    ((EntityGhost) e).setState(GhostState.FRIGHTENED);
-            }
-        } else if (movementMap.get(pos) != StaticEntity.EMPTY && movementMap.get(pos) != StaticEntity.WALL) {
-            totalScore += scoreMap.get(movementMap.get(pos));
-            levelScore += scoreMap.get(movementMap.get(pos));
-            dynamicScore = -scoreMap.get(movementMap.get(pos));
-            movementMap.replace(pos, StaticEntity.EMPTY);
-            hasEatenFruit = true;
-        }
-        if (nbGum == (int)(.6f * totalGum)) {
-            spawnFruit();
-        }
-        if (lastLevelScore < Game.EXTRA_LIFE_THRESHOLD && levelScore >= Game.EXTRA_LIFE_THRESHOLD) {
-            lives++;
-            hasExtraLife = true;
-        }
-        lastLevelScore = levelScore;
-        return false;
-    }
 
     public boolean canMove(Movement dir, MoveableEntity entity) {
         if (entity instanceof EntityPlayer)
@@ -310,11 +208,10 @@ public class Grid {
         if (pos == null)
             return false;
         StaticEntity nextPos = getStaticEntity(dir, pos);
-        return nextPos != StaticEntity.WALL;
-    }
-
-    public void moveToHome(EntityGhost ghost) {
-        entities.replace(ghost, ghostHome);
+        if (nextPos == StaticEntity.GATE)
+            if (entity instanceof EntityGhost && (((EntityGhost) entity).getState() == GhostState.STARTING || ((EntityGhost) entity).getState() == GhostState.EATEN))
+                return true;
+        return nextPos != StaticEntity.WALL && nextPos != StaticEntity.GATE;
     }
 
     public void move(Movement dir, MoveableEntity entity) {
@@ -344,7 +241,6 @@ public class Grid {
     }
 
 
-
     public int getSizeX() {
         return sizeX;
     }
@@ -353,26 +249,9 @@ public class Grid {
         return sizeY;
     }
 
-
-
-    public EntityPlayer getPlayer() {
-        return player;
+    public Set<MoveableEntity> getEntities() {
+        return entities.keySet();
     }
-
-    public EntityGhost getGhost(GhostName name) {
-        switch (name) {
-            case BLINKY:
-                return blinky;
-            case INKY:
-                return inky;
-            case PINKY:
-                return pinky;
-            case CLYDE:
-                return clyde;
-        }
-        return null;
-    }
-
 
 
     public Point getPosition(MoveableEntity entity) {
@@ -399,88 +278,20 @@ public class Grid {
         return null;
     }
 
+    public void setStaticEntity(Point pos, StaticEntity type) {
+        int count = staticEntitiesCount.get(movementMap.get(pos));
+        staticEntitiesCount.replace(movementMap.get(pos), count - 1);
+        movementMap.replace(pos, type);
+        count = staticEntitiesCount.get(type);
+        staticEntitiesCount.replace(movementMap.get(pos), count + 1);
+    }
+
     public boolean isType(Point pos, StaticEntity type) {
         StaticEntity e = movementMap.get(pos);
         return e == type;
     }
 
-
-
-    public boolean isGameFinished() {
-        return nbGum == 0;
-    }
-
-    public boolean hasEatenGhost() {
-        if (hasEatenGhost)
-            System.out.println(hasEatenGhost);
-        boolean tmp = hasEatenGhost;
-        hasEatenGhost = false;
-        return tmp;
-    }
-
-    public boolean hasEatenFruit() {
-        boolean tmp = hasEatenFruit;
-        hasEatenFruit = false;
-        return tmp;
-    }
-
-    public boolean hasPlayerDied() {
-        boolean tmp = hasPlayerDied;
-        hasPlayerDied = false;
-        return tmp;
-    }
-
-    public boolean hasExtraLife() {
-        boolean tmp = hasExtraLife;
-        hasExtraLife = false;
-        return tmp;
-    }
-
-    public boolean hasEatenGum() {
-        boolean tmp = hasEatenGum;
-        hasEatenGum = false;
-        return tmp;
-    }
-
-    public boolean areGhostFrightened() {
-        for (MoveableEntity e : entities.keySet()) {
-            if (e instanceof EntityGhost && ((EntityGhost) e).getState() == GhostState.FRIGHTENED)
-                return true;
-        }
-        return false;
-    }
-
-    public boolean areGhostEaten() {
-        for (MoveableEntity e : entities.keySet()) {
-            if (e instanceof EntityGhost && ((EntityGhost) e).getState() == GhostState.EATEN)
-                return true;
-        }
-        return false;
-    }
-
-    public int getLives() {
-        return lives;
-    }
-
-    public void setLives(int lives) {
-        this.lives = lives;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public int getTotalScore() {
-        return totalScore;
-    }
-
-    public Point getGhostHome() {
-        return ghostHome;
-    }
-
-    public int getDynamicScore() {
-        int tmp = dynamicScore;
-        dynamicScore = 0;
-        return tmp;
+    public int getStaticEntityCount(StaticEntity type) {
+        return staticEntitiesCount.get(type);
     }
 }

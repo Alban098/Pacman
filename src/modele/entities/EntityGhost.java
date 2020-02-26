@@ -1,7 +1,12 @@
 package modele.entities;
 
 import modele.*;
+import modele.enums.GhostName;
+import modele.enums.GhostState;
+import modele.enums.Movement;
 import modele.logic.TargetTileFinder;
+
+import java.awt.*;
 
 public class EntityGhost extends MoveableEntity implements Runnable {
 
@@ -13,16 +18,19 @@ public class EntityGhost extends MoveableEntity implements Runnable {
     private long whenToGetOutOfFrightenedState = 0;
     private long whenToSwitchState = 0;
     private long whenToStart = 0;
+    private GhostName name;
+    private Point startingPoint;
 
     private final int startingTime;
     private int modeSwitchIndex = 1;
 
-    public EntityGhost(TargetTileFinder pathFinding, Grid grid, int startingTime) {
+    public EntityGhost(TargetTileFinder pathFinding, Grid grid, int startingTime, GhostName name) {
         super(grid);
         state = GhostState.STILL;
         currentDirection = Movement.NONE;
         this.startingTime = startingTime;
         this.pathFinding = pathFinding;
+        this.name = name;
     }
 
     public synchronized GhostState getState() {
@@ -58,36 +66,49 @@ public class EntityGhost extends MoveableEntity implements Runnable {
 
     @Override
     protected void update() {
-        if (state == GhostState.STILL) {
-            if (System.currentTimeMillis() >= whenToStart) {
-                grid.moveToHome(this);
-                setState(GhostState.SCATTER);
+        EntityPlayer player = null;
+        for (MoveableEntity e : grid.getEntities()) {
+            if (e instanceof EntityPlayer) {
+                player = (EntityPlayer) e;
             }
-            return;
-        } else if (state == GhostState.FRIGHTENED) {
-            if (System.currentTimeMillis() >= whenToGetOutOfFrightenedState)
-                setState(GhostState.CHASE);
-        } else if (state == GhostState.EATEN) {
-            if (grid.getPosition(this).equals(grid.getGhostHome()))
-                setState(GhostState.CHASE);
-        } else if (modeSwitchIndex < MODE_SWITCH_ARRAY.length && System.currentTimeMillis() >= whenToSwitchState && state != GhostState.STILL) {
-            whenToSwitchState += MODE_SWITCH_ARRAY[modeSwitchIndex];
-            if (modeSwitchIndex % 2 == 1) {
-                setState(GhostState.CHASE);
-            } else
-                setState(GhostState.SCATTER);
         }
-        Movement target = pathFinding.getDirection(grid, this, grid.getPlayer());
-        if (requestedAction != null)
-            target = requestedAction;
-        requestedAction = null;
-        if (grid.canMove(target, this)) {
-            grid.move(target, this);
-            currentDirection = target;
-        } else {
-            currentDirection = Movement.NONE;
+        if (player != null) {
+            if (state == GhostState.STILL) {
+                if (System.currentTimeMillis() >= whenToStart) {
+                    setState(GhostState.STARTING);
+                }
+                return;
+            } else if (state == GhostState.STARTING) {
+                if (grid.getPosition(this).equals(startingPoint))
+                    if (modeSwitchIndex >= MODE_SWITCH_ARRAY.length)
+                        setState(GhostState.CHASE);
+                    else
+                        setState(GhostState.SCATTER);
+            } else if (state == GhostState.FRIGHTENED) {
+                if (System.currentTimeMillis() >= whenToGetOutOfFrightenedState)
+                    setState(GhostState.CHASE);
+            } else if (state == GhostState.EATEN) {
+                if (grid.getPosition(this).equals(getSpawnPoint()))
+                    setState(GhostState.STARTING);
+            } else if (modeSwitchIndex < MODE_SWITCH_ARRAY.length && System.currentTimeMillis() >= whenToSwitchState && state != GhostState.STILL) {
+                whenToSwitchState += MODE_SWITCH_ARRAY[modeSwitchIndex];
+                if (modeSwitchIndex % 2 == 1)
+                    setState(GhostState.CHASE);
+                else
+                    setState(GhostState.SCATTER);
+            }
+            Movement target = pathFinding.getDirection(grid, this, player);
+            if (requestedAction != null)
+                target = requestedAction;
+            requestedAction = null;
+            if (grid.canMove(target, this)) {
+                grid.move(target, this);
+                currentDirection = target;
+            } else {
+                currentDirection = Movement.NONE;
+            }
+            lastActionTime = System.currentTimeMillis();
         }
-        lastActionTime = System.currentTimeMillis();
     }
 
     @Override
@@ -126,5 +147,17 @@ public class EntityGhost extends MoveableEntity implements Runnable {
         whenToSwitchState = 0;
         whenToStart = 0;
         modeSwitchIndex = 1;
+    }
+
+    public GhostName getName() {
+        return name;
+    }
+
+    public Point getStartingPoint() {
+        return startingPoint;
+    }
+
+    public void setStartingPoint(Point startingPoint) {
+        this.startingPoint = startingPoint;
     }
 }

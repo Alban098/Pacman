@@ -1,4 +1,4 @@
-package modele;
+package modele.enums;
 
 public enum GhostState {
     EATEN,
@@ -6,4 +6,5 @@ public enum GhostState {
     SCATTER,
     FRIGHTENED,
     STILL,
+    STARTING
 }

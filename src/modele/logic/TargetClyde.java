@@ -4,8 +4,8 @@ import modele.Grid;
 import modele.Utils;
 import modele.entities.EntityGhost;
 import modele.entities.EntityPlayer;
-import modele.GhostState;
-import modele.Movement;
+import modele.enums.GhostState;
+import modele.enums.Movement;
 
 import java.awt.*;
 

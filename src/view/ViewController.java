@@ -16,7 +16,6 @@ import java.util.Observable;
 import java.util.Observer;
 
 import modele.entities.EntityGhost;
-import modele.entities.EntityPlayer;
 import modele.entities.MoveableEntity;
 import javafx.application.Platform;
 import javafx.scene.canvas.GraphicsContext;
@@ -27,13 +26,19 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.scene.canvas.Canvas;
+import modele.enums.GhostName;
+import modele.enums.GhostState;
+import modele.enums.Movement;
+import modele.entities.StaticEntity;
 
 public class ViewController extends Application implements Observer {
 
-    private static final byte MASK_WALL_RIGHT = 0b1000;
-    private static final byte MASK_WALL_UP =    0b0100;
-    private static final byte MASK_WALL_LEFT =  0b0010;
-    private static final byte MASK_WALL_DOWN =  0b0001;
+    private static final byte MASK_WALL_RIGHT =  0b1000;
+    private static final byte MASK_WALL_UP =     0b0100;
+    private static final byte MASK_WALL_LEFT =   0b0010;
+    private static final byte MASK_WALL_DOWN =   0b0001;
+    private static final byte MASK_GATE_UP =   0b010000;
+    private static final byte MASK_GATE_LEFT = 0b100000;
 
     Map<MoveableEntity, Sprite> foregroundSpriteMap;
     Map<StaticEntity, Image> backgroundTileMap;
@@ -65,8 +70,8 @@ public class ViewController extends Application implements Observer {
         audioController = new AudioController(game);
 
         renderer = () -> {
-            primaryStage.setWidth(15*game.getSizeX() + 16);
-            primaryStage.setHeight(15*game.getSizeY() + 39);
+            primaryStage.setWidth(16*game.getSizeX() + 16);
+            primaryStage.setHeight(16*game.getSizeY() + 39);
 
             drawBackground();
             drawForeground();
@@ -78,16 +83,22 @@ public class ViewController extends Application implements Observer {
         wallTileMap = new HashMap<>();
         GUITileMap = new HashMap<>();
 
-        foreground = new Canvas(15*game.getSizeX(), 15*game.getSizeY());
-        background = new Canvas(15*game.getSizeX(), 15*game.getSizeY());
-        gui = new Canvas(15*game.getSizeX(), 15*game.getSizeY());
+        foreground = new Canvas(16*game.getSizeX(), 16*game.getSizeY());
+        background = new Canvas(16*game.getSizeX(), 16*game.getSizeY());
+        gui = new Canvas(16*game.getSizeX(), 16*game.getSizeY());
+        /*background.setScaleX(2.0);
+        background.setScaleY(2.0);
+        foreground.setScaleX(2.0);
+        foreground.setScaleY(2.0);
+        gui.setScaleX(2.0);
+        gui.setScaleY(2.0);*/
 
         StackPane root = new StackPane();
         root.getChildren().add(background);
         root.getChildren().add(foreground);
         root.getChildren().add(gui);
 
-        Scene scene = new Scene(root, 15*game.getSizeX(), 15*game.getSizeY());
+        Scene scene = new Scene(root, 16*game.getSizeX(), 16*game.getSizeY());
 
         primaryStage.setTitle("Beta 1.6");
         primaryStage.setOnCloseRequest(we -> {
@@ -223,6 +234,9 @@ public class ViewController extends Application implements Observer {
         GUITileMap.put(GUIElement.GAME_OVER, new Image("resources/sprites/gui/gameover.png"));
         GUITileMap.put(GUIElement.LIVE, new Image("resources/sprites/gui/live.png"));
 
+
+        wallTileMap.put(MASK_GATE_UP, new Image("resources/sprites/map/gate_v.png"));
+        wallTileMap.put(MASK_GATE_LEFT, new Image("resources/sprites/map/gate_h.png"));
         wallTileMap.put((byte) 0b0000, new Image("resources/sprites/map/wall_none.png"));
         wallTileMap.put(MASK_WALL_DOWN, new Image("resources/sprites/map/wall_down.png"));
         wallTileMap.put(MASK_WALL_UP, new Image("resources/sprites/map/wall_up.png"));
@@ -243,24 +257,35 @@ public class ViewController extends Application implements Observer {
     }
 
     private void drawBackground() {
-        background.setWidth(15*game.getSizeX());
-        background.setHeight(15*game.getSizeY());
+        background.setWidth(16*game.getSizeX());
+        background.setHeight(16*game.getSizeY());
         final GraphicsContext gc = background.getGraphicsContext2D();
+        gc.setFill(Color.BLACK);
+        gc.fillRect(0, 0, background.getWidth(), background.getHeight());
         for (int i = 0; i < game.getSizeX(); i++) {
             for (int j = 0; j < game.getSizeY(); j++) {
                 Point pos = new Point(i, j);
                 if (game.getTileType(pos) == StaticEntity.WALL) {
-                    gc.drawImage(wallTileMap.get(getWallMask(pos)), 15 * pos.x, 15 * pos.y);
+                    gc.drawImage(wallTileMap.get(getWallMask(pos)), 16 * pos.x, 16 * pos.y);
+                } else if (game.getTileType(pos) == StaticEntity.GATE) {
+                    if (game.getTileType(Movement.UP, pos) == StaticEntity.WALL || game.getTileType(Movement.UP, pos) == StaticEntity.GATE)
+                        gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * pos.y - 3, 16, 11);
+                    if (game.getTileType(Movement.DOWN, pos) == StaticEntity.WALL || game.getTileType(Movement.DOWN, pos) == StaticEntity.GATE)
+                        gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * pos.y - 3 + 11, 16, 11);
+                    if (game.getTileType(Movement.LEFT, pos) == StaticEntity.WALL || game.getTileType(Movement.LEFT, pos) == StaticEntity.GATE)
+                        gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3, 16 * pos.y, 11, 16);
+                    if (game.getTileType(Movement.RIGHT, pos) == StaticEntity.WALL || game.getTileType(Movement.RIGHT, pos) == StaticEntity.GATE)
+                        gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3 + 11, 16 * pos.y, 11, 16);
                 } else {
-                    gc.drawImage(backgroundTileMap.get(game.getTileType(pos)), 15 * pos.x, 15 * pos.y);
+                    gc.drawImage(backgroundTileMap.get(game.getTileType(pos)), 16 * pos.x, 16 * pos.y);
                 }
             }
         }
     }
 
     private void drawForeground() {
-        foreground.setWidth(15*game.getSizeX());
-        foreground.setHeight(15*game.getSizeY());
+        foreground.setWidth(16*game.getSizeX());
+        foreground.setHeight(16*game.getSizeY());
         final GraphicsContext gc = foreground.getGraphicsContext2D();
         gc.clearRect(0, 0, foreground.getWidth(), foreground.getHeight());
         if (!game.isPlayerDead()) {
@@ -281,7 +306,7 @@ public class ViewController extends Application implements Observer {
             }
             if (System.currentTimeMillis() <= whenToStopDeathAnim) {
                 Point pos = game.getPosition(game.getPlayer());
-                gc.drawImage(foregroundSpriteMap.get(game.getPlayer()).getFrame(SpriteID.DEATH), 15 * pos.x, 15 * pos.y);
+                gc.drawImage(foregroundSpriteMap.get(game.getPlayer()).getFrame(SpriteID.DEATH), 16 * pos.x, 16 * pos.y);
             } else {
                 game.resetPlayer();
                 audioController.canPlayIntro(true);
@@ -303,35 +328,34 @@ public class ViewController extends Application implements Observer {
     }
 
     private void drawGUI() {
-        gui.setWidth(15*game.getSizeX());
-        gui.setHeight(15*game.getSizeY());
+        gui.setWidth(16*game.getSizeX());
+        gui.setHeight(16*game.getSizeY());
         final GraphicsContext gc = gui.getGraphicsContext2D();
         gc.clearRect(0, 0, gui.getWidth(), gui.getHeight());
         gc.setFill(Color.gray(.2f));
-        gc.fillRect(0, 0, gui.getWidth(), 31);
+        gc.fillRect(0, 0, gui.getWidth(), 33);
 
         gc.setFill(Color.WHITE);
-        gc.fillText("Level", 15, 13);
-        gc.fillText("Score", 15, 13+15);
+        gc.fillText("Level", 16, 13);
+        gc.fillText("Score", 16, 13+16);
 
 
         for (int i = (int) Math.log10(game.getTotalScore() + 1); i >= 0; i--) {
             int digit = (int) (game.getTotalScore() / Math.pow(10, (int)Math.log10(game.getTotalScore()) -  i)) % 10;
-            drawDigit(digit, new Point(9*(i + 5) + 3, 20), gc);
+            drawDigit(digit, new Point(9*(i + 5) + 3, 21), gc);
         }
         for (int i = (int) Math.log10(game.getLevel()); i >= 0; i--) {
             int digit = (int) (game.getLevel() / Math.pow(10, (int)Math.log10(game.getLevel()) -  i)) % 10;
             drawDigit(digit, new Point(9*(i + 5), 5), gc);
         }
         for (int i = 0; i < game.getLives(); i++) {
-            gc.drawImage(GUITileMap.get(GUIElement.LIVE), gui.getWidth() - 15*(i+2), 15);
+            gc.drawImage(GUITileMap.get(GUIElement.LIVE), gui.getWidth() - 15*(i+2), 16);
         }
-
-        if (!game.isGameStarted() && isDeathAnimFinished && !game.isGameFinished()) {
-            gc.drawImage(GUITileMap.get(GUIElement.READY), 15*(game.getSizeX()/2 - 2), 15*(game.getSizeY()/2 + 2), 5*15, 15);
+        if (!game.isGameStarted() && isDeathAnimFinished && game.getLives() >= 0) {
+            gc.drawImage(GUITileMap.get(GUIElement.READY), 16*(game.getSizeX()/2 - 2), 16*(game.getSizeY()/2 + 2), 5*16, 16);
         }
         if (game.isGameFinished() && game.isPlayerDead() && isDeathAnimFinished) {
-            gc.drawImage(GUITileMap.get(GUIElement.GAME_OVER), 15*(game.getSizeX()/2 - 3), 15*(game.getSizeY()/2 + 2), 7*15, 15);
+            gc.drawImage(GUITileMap.get(GUIElement.GAME_OVER), 16*(game.getSizeX()/2 - 3), 16*(game.getSizeY()/2 + 2), 7*16, 16);
         }
 
         int score = game.getDynamicScoreEventValue();
@@ -344,40 +368,40 @@ public class ViewController extends Application implements Observer {
         if (isScoreAnimPlaying) {
             switch (dynamicScore) {
                 case 200:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_200), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_200), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case 400:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_400), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_400), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case 800:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_800), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_800), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case 1600:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_1600), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_1600), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case -100:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_100), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_100), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case -300:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_300), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_300), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case -500:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_500), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_500), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case -700:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_700), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_700), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case -1000:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_1000), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_1000), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case -2000:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_2000), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_2000), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case -3000:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_3000), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_3000), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 case -5000:
-                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_5000), 15 * dynamicScorePos.x, 15 * dynamicScorePos.y);
+                    gc.drawImage(GUITileMap.get(GUIElement.SCORE_FRUIT_5000), 16 * dynamicScorePos.x, 16 * dynamicScorePos.y);
                     break;
                 default:
             }
@@ -426,6 +450,8 @@ public class ViewController extends Application implements Observer {
     }
 
     private void drawSprite(MoveableEntity entity, GraphicsContext gc) {
+        if (entity == null)
+            return;
         Point pos = game.getPosition(entity);
         Point lastPos = new Point(pos.x, pos.y);
         Movement dir = game.getDirection(entity);
@@ -436,22 +462,22 @@ public class ViewController extends Application implements Observer {
                 switch (dir) {
                     case UP:
                         lastPos.y++;
-                        gc.drawImage(sprite.getFrame(SpriteID.EATEN_UP), 15 * lastPos.x, 15 * (lastPos.y - animationPercent));
+                        gc.drawImage(sprite.getFrame(SpriteID.EATEN_UP), 16 * lastPos.x, 16 * (lastPos.y - animationPercent));
                         break;
                     case DOWN:
                         lastPos.y--;
-                        gc.drawImage(sprite.getFrame(SpriteID.EATEN_DOWN), 15 * lastPos.x, 15 * (lastPos.y + animationPercent));
+                        gc.drawImage(sprite.getFrame(SpriteID.EATEN_DOWN), 16 * lastPos.x, 16 * (lastPos.y + animationPercent));
                         break;
                     case LEFT:
                         lastPos.x++;
-                        gc.drawImage(sprite.getFrame(SpriteID.EATEN_LEFT), 15 * (lastPos.x - animationPercent), 15 * lastPos.y);
+                        gc.drawImage(sprite.getFrame(SpriteID.EATEN_LEFT), 16 * (lastPos.x - animationPercent), 16 * lastPos.y);
                         break;
                     case RIGHT:
                         lastPos.x--;
-                        gc.drawImage(sprite.getFrame(SpriteID.EATEN_RIGHT), 15 * (lastPos.x + animationPercent), 15 * lastPos.y);
+                        gc.drawImage(sprite.getFrame(SpriteID.EATEN_RIGHT), 16 * (lastPos.x + animationPercent), 16 * lastPos.y);
                         break;
                     default:
-                        gc.drawImage(sprite.getFrame(SpriteID.LAST), 15 * pos.x, 15 * pos.y);
+                        gc.drawImage(sprite.getFrame(SpriteID.LAST), 16 * pos.x, 16 * pos.y);
                         break;
                 }
                 return;
@@ -459,22 +485,22 @@ public class ViewController extends Application implements Observer {
                 switch (dir) {
                     case UP:
                         lastPos.y++;
-                        gc.drawImage(sprite.getFrame(SpriteID.FRIGHTENED), 15 * lastPos.x, 15 * (lastPos.y - animationPercent));
+                        gc.drawImage(sprite.getFrame(SpriteID.FRIGHTENED), 16 * lastPos.x, 16 * (lastPos.y - animationPercent));
                         break;
                     case DOWN:
                         lastPos.y--;
-                        gc.drawImage(sprite.getFrame(SpriteID.FRIGHTENED), 15 * lastPos.x, 15 * (lastPos.y + animationPercent));
+                        gc.drawImage(sprite.getFrame(SpriteID.FRIGHTENED), 16 * lastPos.x, 16 * (lastPos.y + animationPercent));
                         break;
                     case LEFT:
                         lastPos.x++;
-                        gc.drawImage(sprite.getFrame(SpriteID.FRIGHTENED), 15 * (lastPos.x - animationPercent), 15 * lastPos.y);
+                        gc.drawImage(sprite.getFrame(SpriteID.FRIGHTENED), 16 * (lastPos.x - animationPercent), 16 * lastPos.y);
                         break;
                     case RIGHT:
                         lastPos.x--;
-                        gc.drawImage(sprite.getFrame(SpriteID.FRIGHTENED), 15 * (lastPos.x + animationPercent), 15 * lastPos.y);
+                        gc.drawImage(sprite.getFrame(SpriteID.FRIGHTENED), 16 * (lastPos.x + animationPercent), 16 * lastPos.y);
                         break;
                     default:
-                        gc.drawImage(sprite.getFrame(SpriteID.FRIGHTENED), 15 * pos.x, 15 * pos.y);
+                        gc.drawImage(sprite.getFrame(SpriteID.FRIGHTENED), 16 * pos.x, 16 * pos.y);
                         break;
                 }
                 return;
@@ -483,22 +509,22 @@ public class ViewController extends Application implements Observer {
         switch (dir) {
             case UP:
                 lastPos.y++;
-                gc.drawImage(sprite.getFrame(SpriteID.UP), 15 * lastPos.x, 15 * (lastPos.y - animationPercent));
+                gc.drawImage(sprite.getFrame(SpriteID.UP), 16 * lastPos.x, 16 * (lastPos.y - animationPercent));
                 break;
             case DOWN:
                 lastPos.y--;
-                gc.drawImage(sprite.getFrame(SpriteID.DOWN), 15 * lastPos.x, 15 * (lastPos.y + animationPercent));
+                gc.drawImage(sprite.getFrame(SpriteID.DOWN), 16 * lastPos.x, 16 * (lastPos.y + animationPercent));
                 break;
             case LEFT:
                 lastPos.x++;
-                gc.drawImage(sprite.getFrame(SpriteID.LEFT), 15 * (lastPos.x - animationPercent), 15 * lastPos.y);
+                gc.drawImage(sprite.getFrame(SpriteID.LEFT), 16 * (lastPos.x - animationPercent), 16 * lastPos.y);
                 break;
             case RIGHT:
                 lastPos.x--;
-                gc.drawImage(sprite.getFrame(SpriteID.RIGHT), 15 * (lastPos.x + animationPercent), 15 * lastPos.y);
+                gc.drawImage(sprite.getFrame(SpriteID.RIGHT), 16 * (lastPos.x + animationPercent), 16 * lastPos.y);
                 break;
             default:
-                gc.drawImage(sprite.getFrame(SpriteID.LAST), 15 * pos.x, 15 * pos.y);
+                gc.drawImage(sprite.getFrame(SpriteID.LAST), 16 * pos.x, 16 * pos.y);
                 break;
         }
     }

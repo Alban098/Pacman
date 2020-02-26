@@ -1,4 +1,4 @@
-package modele;
+package modele.enums;
 
 public enum Movement {
     UP,

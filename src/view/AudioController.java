@@ -93,7 +93,7 @@ public class AudioController implements Observer{
                 canPlayIntro = false;
             }
         }
-        if (game.isGameFinished() && canPlayIntro && canPlayEnd) {
+        if (game.isGameFinished() && game.isPlayerDead() && canPlayIntro && canPlayEnd) {
             loopChannel(AudioID.END);
             pauseChannel(AudioID.GHOST_HOME);
             pauseChannel(AudioID.GHOST_SIREN);

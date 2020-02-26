@@ -4,8 +4,9 @@ import modele.Grid;
 import modele.Utils;
 import modele.entities.EntityGhost;
 import modele.entities.EntityPlayer;
-import modele.GhostState;
-import modele.Movement;
+import modele.enums.GhostName;
+import modele.enums.GhostState;
+import modele.enums.Movement;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -21,7 +22,13 @@ public abstract class TargetTileFinder {
             List<Movement> legalMoves = getLegalMoves(grid, ghost);
             return legalMoves.get(new Random().nextInt(legalMoves.size()));
         } else if (ghost.getState() == GhostState.EATEN) {
-            Point target = grid.getGhostHome();
+            Point target = ghost.getSpawnPoint();
+            return getBestDirToTarget(grid, ghost, target);
+        } else if (ghost.getState() == GhostState.STILL) {
+            Point target = ghost.getSpawnPoint();
+            return getBestDirToTarget(grid, ghost, target);
+        } else if (ghost.getState() == GhostState.STARTING) {
+            Point target = ghost.getStartingPoint();
             return getBestDirToTarget(grid, ghost, target);
         }
         return null;
@@ -103,6 +110,20 @@ public abstract class TargetTileFinder {
             }
         }
         return preferedMove;
+    }
+
+    public static TargetTileFinder getTargetFinder(GhostName name) {
+        switch (name) {
+            case INKY:
+                return new TargetInky();
+            case PINKY:
+                return new TargetPinky();
+            case CLYDE:
+                return new TargetClyde();
+            case BLINKY:
+            default:
+                return new TargetBlinky();
+        }
     }
 
 }
