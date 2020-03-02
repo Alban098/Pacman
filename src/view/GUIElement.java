@@ -25,5 +25,6 @@ public enum GUIElement {
     N_6,
     N_7,
     N_8,
-    N_9
+    N_9,
+    LOGO,
 }
