@@ -1,4 +1,4 @@
-package view;
+package controller.view;
 
 
 import javafx.scene.image.Image;

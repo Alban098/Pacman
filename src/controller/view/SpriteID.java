@@ -1,4 +1,4 @@
-package view;
+package controller.view;
 
 public enum SpriteID {
     UP,

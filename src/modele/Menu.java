@@ -3,7 +3,7 @@ package modele;
 import modele.game.Game;
 import modele.game.enums.GameState;
 import modele.game.enums.MenuTab;
-import view.InputController;
+import controller.input.InputController;
 import java.util.Observable;
 
 

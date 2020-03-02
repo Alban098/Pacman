@@ -46,9 +46,33 @@ public class Grid {
     }
 
     private void init(int level) {
-        Point size = loader.loadMap(this, entities, movementMap, staticEntitiesCount, level);
+        Point size = loader.loadMap(this, movementMap, staticEntitiesCount, level);
         sizeX = size.x;
         sizeY = size.y;
+
+        for (Point p : movementMap.keySet()) {
+            if (getStaticEntity(p) == StaticEntity.ITEM_SPAWN) {
+                FruitSpawner fs = new FruitSpawner(this);
+                fs.setSpawnPoint(new Point(p.x, p.y));
+                entities.put(fs, null);
+            } else if (getStaticEntity(p) == StaticEntity.GHOST_HOME) {
+                for (MoveableEntity e : entities.keySet()) {
+                    if (e instanceof EntityGhost)
+                        ((EntityGhost) e).setStartingPoint(new Point(p.x, p.y));
+                }
+            } else if (getStaticEntity(p) == StaticEntity.GHOST_SPAWN) {
+                for (MoveableEntity e : entities.keySet()) {
+                    if (e instanceof EntityGhost)
+                        e.setSpawnPoint(new Point(p.x, p.y));
+                }
+            } else if (getStaticEntity(p) == StaticEntity.PLAYER_SPAWN) {
+                for (MoveableEntity e : entities.keySet()) {
+                    if (e instanceof EntityPlayer)
+                        e.setSpawnPoint(new Point(p.x, p.y));
+                }
+            }
+        }
+
         for (MoveableEntity e : entities.keySet()) {
             entities.replace(e, e.getSpawnPoint());
             e.reset();

@@ -1,4 +1,4 @@
-package view;
+package controller.audio;
 
 import java.io.File;
 import java.io.IOException;

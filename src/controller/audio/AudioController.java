@@ -1,4 +1,4 @@
-package view;
+package controller.audio;
 
 import modele.Menu;
 import modele.game.Game;
@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
-public class AudioController implements Observer{
+public class AudioController implements Observer {
 
     private Game game;
     private Menu menu;
@@ -22,16 +22,16 @@ public class AudioController implements Observer{
     public AudioController(Game instance, Menu menu) {
         audioChannels = new HashMap<>();
 
-        addChannel(AudioID.DEATH, getClass().getResource("../resources/audio/death.wav").getFile(), false);
-        addChannel(AudioID.EATING, getClass().getResource("../resources/audio/eating.wav").getFile(), false);
-        addChannel(AudioID.EATING_FRUIT, getClass().getResource("../resources/audio/eating-fruit.wav").getFile(), true);
-        addChannel(AudioID.EATING_GHOST, getClass().getResource("../resources/audio/eating-ghost.wav").getFile(), true);
-        addChannel(AudioID.EXTRA_LIFE, getClass().getResource("../resources/audio/extra-life.wav").getFile(), false);
-        addChannel(AudioID.GHOST_SIREN, getClass().getResource("../resources/audio/ghost-siren.wav").getFile(), false);
-        addChannel(AudioID.GHOST_HOME, getClass().getResource("../resources/audio/ghost-home.wav").getFile(), false);
-        addChannel(AudioID.GHOST_FRIGHTENED, getClass().getResource("../resources/audio/ghost-frightened.wav").getFile(), false);
-        addChannel(AudioID.INTRO, getClass().getResource("../resources/audio/ready.wav").getFile(), false);
-        addChannel(AudioID.END, getClass().getResource("../resources/audio/end.wav").getFile(), false);
+        addChannel(AudioID.DEATH, getClass().getResource("../../resources/audio/death.wav").getFile(), false);
+        addChannel(AudioID.EATING, getClass().getResource("../../resources/audio/eating.wav").getFile(), false);
+        addChannel(AudioID.EATING_FRUIT, getClass().getResource("../../resources/audio/eating-fruit.wav").getFile(), true);
+        addChannel(AudioID.EATING_GHOST, getClass().getResource("../../resources/audio/eating-ghost.wav").getFile(), true);
+        addChannel(AudioID.EXTRA_LIFE, getClass().getResource("../../resources/audio/extra-life.wav").getFile(), false);
+        addChannel(AudioID.GHOST_SIREN, getClass().getResource("../../resources/audio/ghost-siren.wav").getFile(), false);
+        addChannel(AudioID.GHOST_HOME, getClass().getResource("../../resources/audio/ghost-home.wav").getFile(), false);
+        addChannel(AudioID.GHOST_FRIGHTENED, getClass().getResource("../../resources/audio/ghost-frightened.wav").getFile(), false);
+        addChannel(AudioID.INTRO, getClass().getResource("../../resources/audio/ready.wav").getFile(), false);
+        addChannel(AudioID.END, getClass().getResource("../../resources/audio/end.wav").getFile(), false);
 
         this.game = instance;
         this.menu = menu;
@@ -39,11 +39,11 @@ public class AudioController implements Observer{
         menu.addObserver(this);
     }
 
-    public void canPlayIntro(boolean can) {
+    public synchronized void canPlayIntro(boolean can) {
         this.canPlayIntro = can;
     }
 
-    public void addChannel(AudioID id, String file, boolean canRestart) {
+    public synchronized void addChannel(AudioID id, String file, boolean canRestart) {
         try {
             audioChannels.put(id, new AudioChannel(file, canRestart));
         } catch (UnsupportedAudioFileException | LineUnavailableException | IOException e) {
@@ -52,15 +52,15 @@ public class AudioController implements Observer{
         }
     }
 
-    public void playChannel(AudioID id) {
+    private void playChannel(AudioID id) {
         audioChannels.get(id).play();
     }
 
-    public void loopChannel(AudioID id) {
+    private void loopChannel(AudioID id) {
         audioChannels.get(id).loop();
     }
 
-    public void pauseChannel(AudioID id) {
+    private void pauseChannel(AudioID id) {
         audioChannels.get(id).pause();
     }
 

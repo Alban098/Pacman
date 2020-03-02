@@ -1,8 +1,13 @@
-package view;
+package controller.input;
 
+import controller.editor.fxml.EditorViewController;
+import controller.view.ViewController;
+import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Stage;
 import modele.Loader;
 import modele.Menu;
 import modele.Utils;
@@ -14,6 +19,7 @@ import modele.game.enums.MenuTab;
 import modele.game.enums.Movement;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.Map;
 
 
@@ -22,6 +28,8 @@ public class InputController {
     private Game game;
     private Menu menu;
     private Loader loader;
+
+    private boolean editorLaunched;
 
     private Map<Input, KeyCode> inputsMap;
 
@@ -101,8 +109,23 @@ public class InputController {
                                 menu.setTab(MenuTab.CONTROLS);
                             if (Utils.isInside(mouseCoords, MenuTab.MAIN.getButton("highscore").getHitbox()))
                                 menu.setTab(MenuTab.HIGHSCORE);
-                            /**if (Utils.isInside(mouseCoords, MenuTab.MAIN.getButton("editor").getHitbox()))
-                                game.setGameState(GameState.LEVEL_EDITOR);*/
+                            if (Utils.isInside(mouseCoords, MenuTab.MAIN.getButton("editor").getHitbox())) {
+                                game.setGameState(GameState.LEVEL_EDITOR);
+                                if (!editorLaunched) {
+                                    Runnable runnable = () -> {
+                                        try {
+                                            EditorViewController editorController = new EditorViewController();
+                                            editorController.setGame(game);
+                                            editorController.setInputController(this);
+                                            editorController.start(new Stage());
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    };
+                                    Platform.runLater(runnable);
+                                    editorLaunched = true;
+                                }
+                            }
                         }
                         break;
                     case CONTROLS:
@@ -159,10 +182,11 @@ public class InputController {
                         }
                 }
                 break;
-            case LEVEL_EDITOR:
-                break;
         }
     }
 
+    public synchronized void setEditorLaunched(boolean editorLaunched) {
+        this.editorLaunched = editorLaunched;
+    }
 }
 

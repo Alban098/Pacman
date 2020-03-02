@@ -1,4 +1,4 @@
-package view;
+package controller.input;
 
 public enum Input {
     UP_P1,

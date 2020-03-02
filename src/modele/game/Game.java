@@ -159,10 +159,6 @@ public class Game extends Observable implements Runnable {
         return highscores;
     }
 
-    public int getNbPlayer() {
-        return nbPlayer;
-    }
-
     public int getScoreToSave() {
         return scoreToSave;
     }
@@ -295,6 +291,10 @@ public class Game extends Observable implements Runnable {
                 grid.resetEntity(e);
             }
         }
+    }
+
+    public void setStaticEntity(Point pos, StaticEntity entity) {
+        grid.setStaticEntity(pos, entity);
     }
 
     public int getLevel() {

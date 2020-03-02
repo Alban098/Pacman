@@ -3,15 +3,22 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package view;
+package controller.view;
 
-import com.sun.javafx.geom.Vec4d;
+import controller.editor.fxml.EditorViewController;
+import controller.input.Input;
+import controller.input.InputController;
+import controller.editor.fxml.Controller;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.StageStyle;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
@@ -32,10 +39,8 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.scene.canvas.Canvas;
-import modele.game.enums.GhostName;
-import modele.game.enums.GhostState;
-import modele.game.enums.MenuTab;
-import modele.game.enums.Movement;
+import modele.game.enums.*;
+import controller.audio.AudioController;
 
 public class ViewController extends Application implements Observer {
 
@@ -59,14 +64,14 @@ public class ViewController extends Application implements Observer {
     private Game game;
     private Menu menu;
 
-    AudioController audioController;
+    public AudioController audioController;
     private InputController inputController;
 
-    long whenToStopDeathAnim;
-    boolean isDeathAnimPlaying = false;
-    boolean isDeathAnimFinished = true;
+    public long whenToStopDeathAnim;
+    public boolean isDeathAnimPlaying = false;
+    public boolean isDeathAnimFinished = true;
 
-    long whenToStopScoreAnim;
+    public long whenToStopScoreAnim;
     boolean isScoreAnimPlaying = false;
     private int dynamicScore;
     private Point dynamicScorePos;
@@ -76,20 +81,20 @@ public class ViewController extends Application implements Observer {
     private Point mouseCoords = new Point(0, 0);
 
     @Override
-    public void start(Stage primaryStage) {
-        Loader loader = new Loader("map.xml", "controls.xml","scores.xml");
+    public void start(Stage primaryStage) throws IOException {
+        Loader loader = new Loader("map.xml", "controls.xml", "scores.xml");
 
         game = new Game(loader);
         menu = new Menu(game);
 
         audioController = new AudioController(game, menu);
-        inputController = new InputController(game, menu,loader);
+        inputController = new InputController(game, menu, loader);
 
         menu.setInputController(inputController);
 
         renderer = () -> {
-            primaryStage.setWidth(16*game.getSizeX() * SCALE + 16);
-            primaryStage.setHeight(16*game.getSizeY() * SCALE + 39);
+            primaryStage.setWidth(16 * game.getSizeX() * SCALE + 16);
+            primaryStage.setHeight(16 * game.getSizeY() * SCALE + 39);
 
             drawBackground();
             drawForeground();
@@ -101,9 +106,9 @@ public class ViewController extends Application implements Observer {
         wallTileMap = new HashMap<>();
         GUITileMap = new HashMap<>();
 
-        foreground = new Canvas(16*game.getSizeX(), 16*game.getSizeY());
-        background = new Canvas(16*game.getSizeX(), 16*game.getSizeY());
-        gui = new Canvas(16*game.getSizeX(), 16*game.getSizeY());
+        foreground = new Canvas(16 * game.getSizeX(), 16 * game.getSizeY());
+        background = new Canvas(16 * game.getSizeX(), 16 * game.getSizeY());
+        gui = new Canvas(16 * game.getSizeX(), 16 * game.getSizeY());
 
         background.setScaleX(SCALE);
         background.setScaleY(SCALE);
@@ -117,7 +122,7 @@ public class ViewController extends Application implements Observer {
         root.getChildren().add(foreground);
         root.getChildren().add(gui);
 
-        Scene scene = new Scene(root, 16*game.getSizeX() * SCALE, 16*game.getSizeY() * SCALE);
+        Scene scene = new Scene(root, 16 * game.getSizeX() * SCALE, 16 * game.getSizeY() * SCALE);
 
         primaryStage.setTitle("Beta 1.6");
         primaryStage.setOnCloseRequest(we -> {
@@ -142,7 +147,7 @@ public class ViewController extends Application implements Observer {
         root.setOnKeyPressed(event -> inputController.handleInput(event, null, this));
         root.setOnMouseClicked(event -> inputController.handleInput(null, event, this));
         root.setOnMouseMoved(event -> {
-            mouseCoords = new Point((int)(event.getSceneX() / SCALE), (int)(event.getSceneY() / SCALE));
+            mouseCoords = new Point((int) (event.getSceneX() / SCALE), (int) (event.getSceneY() / SCALE));
         });
         root.requestFocus();
     }
@@ -270,7 +275,7 @@ public class ViewController extends Application implements Observer {
         wallTileMap.put((byte) (MASK_WALL_LEFT | MASK_WALL_UP | MASK_WALL_RIGHT | MASK_WALL_DOWN), new Image("resources/sprites/map/wall_all.png"));
     }
 
-    void resetSprites() {
+    public void resetSprites() {
         for (MoveableEntity e : game.getEntities())
             if (e instanceof EntityGhost || e instanceof EntityPlayer)
                 foregroundSpriteMap.get(e).getFrame(SpriteID.UP);
@@ -306,10 +311,6 @@ public class ViewController extends Application implements Observer {
                         }
                     }
                 }
-                break;
-            case MENU_SCREEN:
-                break;
-            case LEVEL_EDITOR:
                 break;
         }
     }
@@ -358,10 +359,6 @@ public class ViewController extends Application implements Observer {
                         }
                     }
                 }
-                break;
-            case MENU_SCREEN:
-                break;
-            case LEVEL_EDITOR:
                 break;
         }
     }
@@ -459,6 +456,7 @@ public class ViewController extends Application implements Observer {
                     }
                 }
                 break;
+            case LEVEL_EDITOR:
             case MENU_SCREEN:
                 switch (menu.getTab()) {
                     case MAIN:
@@ -531,8 +529,6 @@ public class ViewController extends Application implements Observer {
                             drawButton(gc, MenuTab.HIGHSCORE_ENTER.getButton(buttonId));
                         break;
                 }
-                break;
-            case LEVEL_EDITOR:
                 break;
         }
     }
@@ -672,7 +668,7 @@ public class ViewController extends Application implements Observer {
         return mask;
     }
 
-    void initButtons() {
+    public void initButtons() {
         MenuTab.CONTROLS.addButton("back", new Button("⮈", new Rectangle((int)(gui.getWidth() * 1/15), (int)(gui.getWidth() * 1/15), 50, 34), 18));
         MenuTab.CONTROLS.addButton(Input.UP_P1.toString(), new Button(inputController.getKey(Input.UP_P1).getName(), new Rectangle((int)(gui.getWidth() / 2 - 37), (int)(gui.getHeight() / 3 - 15 - 40), 74, 30), 15));
         MenuTab.CONTROLS.addButton(Input.DOWN_P1.toString(), new Button(inputController.getKey(Input.DOWN_P1).getName(), new Rectangle((int)(gui.getWidth() /2 - 37), (int)(gui.getHeight() / 3 - 15 + 40), 74, 30), 15));

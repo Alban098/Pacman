@@ -1,4 +1,4 @@
-package view;
+package controller.audio;
 
 public enum AudioID {
     INTRO,

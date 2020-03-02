@@ -7,7 +7,7 @@ import modele.game.entities.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import view.Input;
+import controller.input.Input;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -176,11 +176,15 @@ public class Loader {
         return inputsMap;
     }
 
-    public Point loadMap(Grid grid, Map<MoveableEntity, Point> entities, Map<Point, StaticEntity> movementMap, Map<StaticEntity, Integer> staticEntitiesCount, int level) {
+    public Point loadMap(Grid grid, Map<Point, StaticEntity> movementMap, Map<StaticEntity, Integer> staticEntitiesCount, int level) {
         staticEntitiesCount.put(StaticEntity.SUPER_GUM, 0);
         staticEntitiesCount.put(StaticEntity.GUM, 0);
         staticEntitiesCount.put(StaticEntity.EMPTY, 0);
         staticEntitiesCount.put(StaticEntity.WALL, 0);
+        staticEntitiesCount.put(StaticEntity.GHOST_HOME, 0);
+        staticEntitiesCount.put(StaticEntity.GHOST_SPAWN, 0);
+        staticEntitiesCount.put(StaticEntity.PLAYER_SPAWN, 0);
+        staticEntitiesCount.put(StaticEntity.ITEM_SPAWN, 0);
         staticEntitiesCount.put(StaticEntity.CHERRY, 0);
         staticEntitiesCount.put(StaticEntity.STRAWBERRY, 0);
         staticEntitiesCount.put(StaticEntity.ORANGE, 0);
@@ -213,11 +217,11 @@ public class Loader {
                     mapNode = e;
             }
             if (mapNode != null) {
-                return constructMap(grid, entities, movementMap, staticEntitiesCount, mapNode);
+                return constructMap(grid, movementMap, staticEntitiesCount, mapNode);
             } else {
                 if (defaultMapNode == null)
                     throw new Exception(mapFile + " file corrupted (Default map not found)");
-                return constructMap(grid, entities, movementMap, staticEntitiesCount,defaultMapNode);
+                return constructMap(grid, movementMap, staticEntitiesCount,defaultMapNode);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -226,7 +230,7 @@ public class Loader {
         return new Point(0, 0);
     }
 
-    private Point constructMap(Grid grid, Map<MoveableEntity, Point> entities, Map<Point, StaticEntity> movementMap, Map<StaticEntity, Integer> staticEntitiesCount, Element xmlElement) throws Exception {
+    private Point constructMap(Grid grid, Map<Point, StaticEntity> movementMap, Map<StaticEntity, Integer> staticEntitiesCount, Element xmlElement) throws Exception {
         int sizeY = Integer.parseInt(xmlElement.getAttribute("sizeY")) + 2;
         int sizeX = Integer.parseInt(xmlElement.getAttribute("sizeX"));
         String[] mapAsString = new String[sizeY - 2];
@@ -265,36 +269,24 @@ public class Loader {
                         staticEntitiesCount.replace(StaticEntity.SUPER_GUM, count + 1);
                         break;
                     case 'G':
-                        for (MoveableEntity e : entities.keySet())
-                            if (e instanceof EntityGhost)
-                                ((EntityGhost) e).setStartingPoint(new Point(rowIndex, lineIndex));
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                        count = staticEntitiesCount.get(StaticEntity.EMPTY);
-                        staticEntitiesCount.replace(StaticEntity.EMPTY, count + 1);
+                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.GHOST_HOME);
+                        count = staticEntitiesCount.get(StaticEntity.GHOST_HOME);
+                        staticEntitiesCount.replace(StaticEntity.GHOST_HOME, count + 1);
                         break;
                     case 'S':
-                        for (MoveableEntity e : entities.keySet())
-                            if (e instanceof EntityGhost)
-                                e.setSpawnPoint(new Point(rowIndex, lineIndex));
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                        count = staticEntitiesCount.get(StaticEntity.EMPTY);
-                        staticEntitiesCount.replace(StaticEntity.EMPTY, count + 1);
+                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.GHOST_SPAWN);
+                        count = staticEntitiesCount.get(StaticEntity.GHOST_SPAWN);
+                        staticEntitiesCount.replace(StaticEntity.GHOST_SPAWN, count + 1);
                         break;
                     case 'P':
-                        for (MoveableEntity e : entities.keySet())
-                            if (e instanceof EntityPlayer)
-                                e.setSpawnPoint(new Point(rowIndex, lineIndex));
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                        count = staticEntitiesCount.get(StaticEntity.EMPTY);
-                        staticEntitiesCount.replace(StaticEntity.EMPTY, count + 1);
+                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.PLAYER_SPAWN);
+                        count = staticEntitiesCount.get(StaticEntity.PLAYER_SPAWN);
+                        staticEntitiesCount.replace(StaticEntity.PLAYER_SPAWN, count + 1);
                         break;
                     case 'I':
-                        FruitSpawner fs = new FruitSpawner(grid);
-                        fs.setSpawnPoint(new Point(rowIndex, lineIndex));
-                        entities.put(fs, null);
-                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                        count = staticEntitiesCount.get(StaticEntity.EMPTY);
-                        staticEntitiesCount.replace(StaticEntity.EMPTY, count + 1);
+                        movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.ITEM_SPAWN);
+                        count = staticEntitiesCount.get(StaticEntity.ITEM_SPAWN);
+                        staticEntitiesCount.replace(StaticEntity.ITEM_SPAWN, count + 1);
                         break;
                     case '0':
                     default:
