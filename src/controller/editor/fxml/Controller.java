@@ -23,9 +23,9 @@ public class Controller {
     public Controller(){
     }
 
-    private static StaticEntity selectionnedEntity = null;
+    private static StaticEntity selectedEntity = null;
 
-    public static StaticEntity getSelectionnedEntity() { return selectionnedEntity; }
+    public static StaticEntity getSelectedEntity() { return selectedEntity; }
 
     @FXML public void width_slider_slide() {
         String str = "Width : " + (int) width_slider.getValue();
@@ -38,42 +38,42 @@ public class Controller {
     }
 
     @FXML public void builder_selected(){
-        selectionnedEntity = null;
+        selectedEntity = null;
     }
 
     @FXML public void options_selected(){
-        selectionnedEntity = null;
+        selectedEntity = null;
     }
 
     @FXML public void wall_bt_click(){
-        selectionnedEntity = StaticEntity.WALL;
+        selectedEntity = StaticEntity.WALL;
     }
 
     @FXML public void gum_bt_click(){
-        selectionnedEntity = StaticEntity.GUM;
+        selectedEntity = StaticEntity.GUM;
     }
 
     @FXML public void super_gum_bt_click(){
-        selectionnedEntity = StaticEntity.SUPER_GUM;
+        selectedEntity = StaticEntity.SUPER_GUM;
     }
 
     @FXML public void ghost_home_bt_click(){
-        selectionnedEntity = StaticEntity.GHOST_HOME;
+        selectedEntity = StaticEntity.GHOST_HOME;
     }
 
     @FXML public void ghost_spawn_bt_click(){
-        selectionnedEntity = StaticEntity.GHOST_SPAWN;
+        selectedEntity = StaticEntity.GHOST_SPAWN;
     }
 
     @FXML public void player_spawn_bt_click(){
-        selectionnedEntity = StaticEntity.PLAYER_SPAWN;
+        selectedEntity = StaticEntity.PLAYER_SPAWN;
     }
 
     @FXML public void item_spawn_bt_click(){
-        selectionnedEntity = StaticEntity.ITEM_SPAWN;
+        selectedEntity = StaticEntity.ITEM_SPAWN;
     }
 
     @FXML public void eraser_bt_click(){
-        selectionnedEntity = StaticEntity.EMPTY;
+        selectedEntity = StaticEntity.EMPTY;
     }
 }

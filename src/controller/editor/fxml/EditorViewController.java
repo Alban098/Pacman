@@ -107,24 +107,24 @@ public class EditorViewController extends Application implements Observer {
 
     private void setTile(MouseEvent event) {
         Point pos = new Point((int) event.getSceneX() / 16, (int) event.getSceneY() / 16);
-        if (grid.getStaticEntity(pos) != null && Controller.getSelectionnedEntity() != null && grid.getStaticEntity(pos) != Controller.getSelectionnedEntity()) {
-            grid.setStaticEntity(pos, Controller.getSelectionnedEntity());
+        if (grid.getStaticEntity(pos) != null && Controller.getSelectedEntity() != null && grid.getStaticEntity(pos) != Controller.getSelectedEntity()) {
+            grid.setStaticEntity(pos, Controller.getSelectedEntity());
             if (grid.getStaticEntity(pos) == StaticEntity.WALL || grid.getStaticEntity(pos) == StaticEntity.EMPTY){
                 if (pos.x == 0){
                     pos.x = grid.getSizeX() - 1;
-                    grid.setStaticEntity(pos, Controller.getSelectionnedEntity());
+                    grid.setStaticEntity(pos, Controller.getSelectedEntity());
                 }
                 if (pos.x == grid.getSizeX() - 1){
                     pos.x = 0;
-                    grid.setStaticEntity(pos, Controller.getSelectionnedEntity());
+                    grid.setStaticEntity(pos, Controller.getSelectedEntity());
                 }
                 if (pos.y == 0){
                     pos.y = grid.getSizeY() - 1;
-                    grid.setStaticEntity(pos, Controller.getSelectionnedEntity());
+                    grid.setStaticEntity(pos, Controller.getSelectedEntity());
                 }
                 if (pos.y == grid.getSizeY() - 1){
                     pos.y = 0;
-                    grid.setStaticEntity(pos, Controller.getSelectionnedEntity());
+                    grid.setStaticEntity(pos, Controller.getSelectedEntity());
                 }
             }
         }
