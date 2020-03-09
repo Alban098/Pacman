@@ -6,6 +6,7 @@
 package controller.editor.fxml;
 
 import controller.input.InputController;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -67,7 +68,7 @@ public class EditorViewController extends Application implements Observer {
         backgroundTileMap = new HashMap<>();
         wallTileMap = new HashMap<>();
 
-        background = new Canvas(16*grid.getSizeX(), 16*grid.getSizeY());
+        background = new Canvas(16*grid.getSizeX(), 16*(grid.getSizeY() - 2));
 
         BorderPane bp = new BorderPane();
 
@@ -94,8 +95,14 @@ public class EditorViewController extends Application implements Observer {
 
         renderer = () -> {
             drawBackground();
-            root.setOnMousePressed(this::setTile);
-            root.setOnMouseDragged(this::setTile);
+            root.setOnMousePressed(event ->  {
+                Point pos = new Point((int) event.getSceneX() / 16, (int) event.getSceneY() / 16 + 2);
+                setTile(pos);
+            });
+            root.setOnMouseDragged(event -> {
+                Point pos = new Point((int) event.getSceneX() / 16, (int) event.getSceneY() / 16 + 2);
+                setTile(pos);
+            });
         };
 
         editor.addObserver(this);
@@ -105,28 +112,10 @@ public class EditorViewController extends Application implements Observer {
         root.requestFocus();
     }
 
-    private void setTile(MouseEvent event) {
-        Point pos = new Point((int) event.getSceneX() / 16, (int) event.getSceneY() / 16);
+    private void setTile(Point pos) {
+
         if (grid.getStaticEntity(pos) != null && Controller.getSelectedEntity() != null && grid.getStaticEntity(pos) != Controller.getSelectedEntity()) {
             grid.setStaticEntity(pos, Controller.getSelectedEntity());
-            if (grid.getStaticEntity(pos) == StaticEntity.WALL || grid.getStaticEntity(pos) == StaticEntity.EMPTY){
-                if (pos.x == 0){
-                    pos.x = grid.getSizeX() - 1;
-                    grid.setStaticEntity(pos, Controller.getSelectedEntity());
-                }
-                if (pos.x == grid.getSizeX() - 1){
-                    pos.x = 0;
-                    grid.setStaticEntity(pos, Controller.getSelectedEntity());
-                }
-                if (pos.y == 0){
-                    pos.y = grid.getSizeY() - 1;
-                    grid.setStaticEntity(pos, Controller.getSelectedEntity());
-                }
-                if (pos.y == grid.getSizeY() - 1){
-                    pos.y = 0;
-                    grid.setStaticEntity(pos, Controller.getSelectedEntity());
-                }
-            }
         }
     }
 
@@ -173,7 +162,7 @@ public class EditorViewController extends Application implements Observer {
 
     private void drawBackground() {
         background.setWidth(16*grid.getSizeX());
-        background.setHeight(16*grid.getSizeY());
+        background.setHeight(16*(grid.getSizeY() - 2));
         background.setScaleX(SCALE);
         background.setScaleY(SCALE);
         final GraphicsContext gc = background.getGraphicsContext2D();
@@ -181,21 +170,21 @@ public class EditorViewController extends Application implements Observer {
         gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, background.getWidth(), background.getHeight());
         for (int i = 0; i < grid.getSizeX(); i++) {
-            for (int j = 0; j < grid.getSizeY(); j++) {
+            for (int j = 2; j < grid.getSizeY(); j++) {
                 Point pos = new Point(i, j);
                 if (grid.getStaticEntity(pos) == StaticEntity.WALL) {
-                    gc.drawImage(wallTileMap.get(getWallMask(pos)), 16 * pos.x, 16 * pos.y);
+                    gc.drawImage(wallTileMap.get(getWallMask(pos)), 16 * pos.x, 16 * (pos.y - 2));
                 } else if (grid.getStaticEntity(pos) == StaticEntity.GATE) {
                     if (grid.getStaticEntity(Movement.UP, pos) == StaticEntity.WALL || grid.getStaticEntity(Movement.UP, pos) == StaticEntity.GATE)
-                        gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * pos.y - 3, 16, 11);
+                        gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * (pos.y - 2) - 3, 16, 11);
                     if (grid.getStaticEntity(Movement.DOWN, pos) == StaticEntity.WALL || grid.getStaticEntity(Movement.DOWN, pos) == StaticEntity.GATE)
-                        gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * pos.y - 3 + 11, 16, 11);
+                        gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * (pos.y - 2) - 3 + 11, 16, 11);
                     if (grid.getStaticEntity(Movement.LEFT, pos) == StaticEntity.WALL || grid.getStaticEntity(Movement.LEFT, pos) == StaticEntity.GATE)
-                        gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3, 16 * pos.y, 11, 16);
+                        gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3, 16 * (pos.y - 2), 11, 16);
                     if (grid.getStaticEntity(Movement.RIGHT, pos) == StaticEntity.WALL || grid.getStaticEntity(Movement.RIGHT, pos) == StaticEntity.GATE)
-                        gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3 + 11, 16 * pos.y, 11, 16);
+                        gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3 + 11, 16 * (pos.y - 2), 11, 16);
                 } else {
-                    gc.drawImage(backgroundTileMap.get(grid.getStaticEntity(pos)), 16 * pos.x, 16 * pos.y);
+                    gc.drawImage(backgroundTileMap.get(grid.getStaticEntity(pos)), 16 * pos.x, 16 * (pos.y - 2));
                 }
             }
         }

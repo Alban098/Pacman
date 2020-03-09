@@ -28,6 +28,7 @@ public class InputController {
     private Game game;
     private Menu menu;
     private Loader loader;
+    private KeyCode currentCode;
 
     private boolean editorLaunched;
 
@@ -141,22 +142,50 @@ public class InputController {
                                 Point mouseCoords = new Point((int) mEvent.getSceneX(), (int) mEvent.getSceneY());
                                 if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton("back").getHitbox()))
                                     menu.setTab(MenuTab.MAIN);
-                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.UP_P1.toString()).getHitbox()))
+                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.UP_P1.toString()).getHitbox())) {
                                     MenuTab.CONTROLS.getButton(Input.UP_P1.toString()).setSelected(true);
-                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.DOWN_P1.toString()).getHitbox()))
+                                    currentCode = inputsMap.get(Input.UP_P1);
+                                }
+                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.DOWN_P1.toString()).getHitbox())) {
                                     MenuTab.CONTROLS.getButton(Input.DOWN_P1.toString()).setSelected(true);
-                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.RIGHT_P1.toString()).getHitbox()))
+                                    currentCode = inputsMap.get(Input.DOWN_P1);
+                                }
+                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.RIGHT_P1.toString()).getHitbox())) {
                                     MenuTab.CONTROLS.getButton(Input.RIGHT_P1.toString()).setSelected(true);
-                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.LEFT_P1.toString()).getHitbox()))
+                                    currentCode = inputsMap.get(Input.RIGHT_P1);
+                                }
+                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.LEFT_P1.toString()).getHitbox())) {
                                     MenuTab.CONTROLS.getButton(Input.LEFT_P1.toString()).setSelected(true);
+                                    currentCode = inputsMap.get(Input.LEFT_P1);
+                                }
+
+                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.UP_P2.toString()).getHitbox())) {
+                                    MenuTab.CONTROLS.getButton(Input.UP_P2.toString()).setSelected(true);
+                                    currentCode = inputsMap.get(Input.UP_P2);
+                                }
+                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.DOWN_P2.toString()).getHitbox())) {
+                                    MenuTab.CONTROLS.getButton(Input.DOWN_P2.toString()).setSelected(true);
+                                    currentCode = inputsMap.get(Input.DOWN_P2);
+                                }
+                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.RIGHT_P2.toString()).getHitbox())) {
+                                    MenuTab.CONTROLS.getButton(Input.RIGHT_P2.toString()).setSelected(true);
+                                    currentCode = inputsMap.get(Input.RIGHT_P2);
+                                }
+                                if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.LEFT_P2.toString()).getHitbox())) {
+                                    MenuTab.CONTROLS.getButton(Input.LEFT_P2.toString()).setSelected(true);
+                                    currentCode = inputsMap.get(Input.LEFT_P2);
+                                }
                             }
                         }
                         if (kEvent != null) {
                             if (isButtonFocused && selectedInput != null) {
-                                setKey(selectedInput, kEvent.getCode());
-                                MenuTab.CONTROLS.getButton(selectedInput.toString()).setSelected(false);
-                                MenuTab.CONTROLS.getButton(selectedInput.toString()).setText(kEvent.getCode().getName());
-                                loader.saveConfigs(inputsMap);
+                                if (currentCode == kEvent.getCode() || !inputsMap.containsValue(kEvent.getCode())) {
+                                    setKey(selectedInput, kEvent.getCode());
+                                    MenuTab.CONTROLS.getButton(selectedInput.toString()).setSelected(false);
+                                    MenuTab.CONTROLS.getButton(selectedInput.toString()).setText(kEvent.getCode().getName());
+                                    loader.saveConfigs(inputsMap);
+                                    currentCode = null;
+                                }
                             }
                         }
                         break;
@@ -175,7 +204,7 @@ public class InputController {
                             else if (kEvent.getCode() == KeyCode.BACK_SPACE && button.getText().length() >= 1)
                                 button.setText(button.getText().substring(0, button.getText().length() - 1));
                             else if (kEvent.getCode().equals(inputsMap.get(Input.ENTER)) && button.getText().length() > 0) {
-                                game.getHighscores().add(new Score(game.getScoreToSave(), button.getText()));
+                                game.addHighscore(new Score(game.getScoreToSave(), button.getText()));
                                 loader.saveHighscore(game.getHighscores());
                                 menu.setTab(MenuTab.MAIN);
                             }

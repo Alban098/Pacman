@@ -1,9 +1,5 @@
 package modele;
 
-import com.sun.javafx.geom.Vec3d;
-import com.sun.javafx.geom.Vec3f;
-import javafx.scene.paint.Color;
-
 import java.awt.*;
 
 public class Utils {

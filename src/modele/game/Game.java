@@ -11,6 +11,7 @@ import modele.game.enums.GhostState;
 import modele.game.enums.Movement;
 import modele.game.entities.StaticEntity;
 
+import java.util.Collections;
 import java.util.List;
 import java.awt.*;
 import java.util.Observable;
@@ -27,7 +28,7 @@ public class Game extends Observable implements Runnable {
     public static final int RESTART_DELAY = 5600;
     public static final int FRIGHTENED_DURATION = 10000;
     public static final int EXTRA_LIFE_THRESHOLD = 1500;
-    public static final int START_LIVES = 0;
+    public static final int START_LIVES = 3;
 
     private final Grid grid;
 
@@ -218,6 +219,7 @@ public class Game extends Observable implements Runnable {
     }
 
     private boolean allGumEaten() {
+        System.out.println(grid.getStaticEntityCount(StaticEntity.SUPER_GUM) + " " + grid.getStaticEntityCount(StaticEntity.GUM));
         return grid.getStaticEntityCount(StaticEntity.SUPER_GUM) + grid.getStaticEntityCount(StaticEntity.GUM) == 0;
     }
 
@@ -293,10 +295,6 @@ public class Game extends Observable implements Runnable {
         }
     }
 
-    public void setStaticEntity(Point pos, StaticEntity entity) {
-        grid.setStaticEntity(pos, entity);
-    }
-
     public int getLevel() {
         return level;
     }
@@ -335,5 +333,11 @@ public class Game extends Observable implements Runnable {
                 return true;
         }
         return false;
+    }
+
+    public void addHighscore(Score score) {
+        highscores.add(score);
+        Collections.sort(highscores);
+        Collections.reverse(highscores);
     }
 }

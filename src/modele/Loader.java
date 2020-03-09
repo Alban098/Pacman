@@ -62,7 +62,6 @@ public class Loader {
     }
 
     public void saveHighscore(List<Score> highscores) {
-        Collections.sort(highscores);
         try {
             Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
             Element rootNode = document.createElement("highscores");
@@ -176,23 +175,7 @@ public class Loader {
         return inputsMap;
     }
 
-    public Point loadMap(Grid grid, Map<Point, StaticEntity> movementMap, Map<StaticEntity, Integer> staticEntitiesCount, int level) {
-        staticEntitiesCount.put(StaticEntity.SUPER_GUM, 0);
-        staticEntitiesCount.put(StaticEntity.GUM, 0);
-        staticEntitiesCount.put(StaticEntity.EMPTY, 0);
-        staticEntitiesCount.put(StaticEntity.WALL, 0);
-        staticEntitiesCount.put(StaticEntity.GHOST_HOME, 0);
-        staticEntitiesCount.put(StaticEntity.GHOST_SPAWN, 0);
-        staticEntitiesCount.put(StaticEntity.PLAYER_SPAWN, 0);
-        staticEntitiesCount.put(StaticEntity.ITEM_SPAWN, 0);
-        staticEntitiesCount.put(StaticEntity.CHERRY, 0);
-        staticEntitiesCount.put(StaticEntity.STRAWBERRY, 0);
-        staticEntitiesCount.put(StaticEntity.ORANGE, 0);
-        staticEntitiesCount.put(StaticEntity.APPLE, 0);
-        staticEntitiesCount.put(StaticEntity.MELON, 0);
-        staticEntitiesCount.put(StaticEntity.GALAXIAN_BOSS, 0);
-        staticEntitiesCount.put(StaticEntity.BELL, 0);
-        staticEntitiesCount.put(StaticEntity.KEY, 0);
+    public Point loadMap(Map<Point, StaticEntity> movementMap, int level) {
 
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -217,11 +200,11 @@ public class Loader {
                     mapNode = e;
             }
             if (mapNode != null) {
-                return constructMap(grid, movementMap, staticEntitiesCount, mapNode);
+                return constructMap(movementMap, mapNode);
             } else {
                 if (defaultMapNode == null)
                     throw new Exception(mapFile + " file corrupted (Default map not found)");
-                return constructMap(grid, movementMap, staticEntitiesCount,defaultMapNode);
+                return constructMap(movementMap,defaultMapNode);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -230,7 +213,7 @@ public class Loader {
         return new Point(0, 0);
     }
 
-    private Point constructMap(Grid grid, Map<Point, StaticEntity> movementMap, Map<StaticEntity, Integer> staticEntitiesCount, Element xmlElement) throws Exception {
+    private Point constructMap(Map<Point, StaticEntity> movementMap, Element xmlElement) throws Exception {
         int sizeY = Integer.parseInt(xmlElement.getAttribute("sizeY")) + 2;
         int sizeX = Integer.parseInt(xmlElement.getAttribute("sizeX"));
         String[] mapAsString = new String[sizeY - 2];
@@ -241,58 +224,67 @@ public class Loader {
                 throw new Exception("Map file corrupted (mismatch rowID");
             mapAsString[i] = e.getTextContent();
         }
+
+        StaticEntity.EMPTY.setCount(0);
+        StaticEntity.WALL.setCount(0);
+        StaticEntity.GATE.setCount(0);
+        StaticEntity.GUM.setCount(0);
+        StaticEntity.GHOST_HOME.setCount(0);
+        StaticEntity.GHOST_SPAWN.setCount(0);
+        StaticEntity.PLAYER_SPAWN.setCount(0);
+        StaticEntity.ITEM_SPAWN.setCount(0);
+        StaticEntity.SUPER_GUM.setCount(0);
+        StaticEntity.CHERRY.setCount(0);
+        StaticEntity.STRAWBERRY.setCount(0);
+        StaticEntity.ORANGE.setCount(0);
+        StaticEntity.APPLE.setCount(0);
+        StaticEntity.MELON.setCount(0);
+        StaticEntity.GALAXIAN_BOSS.setCount(0);
+        StaticEntity.BELL.setCount(0);
+        StaticEntity.KEY.setCount(0);
+
         int lineIndex = 2;
         int rowIndex = 0;
         for (String line : mapAsString) {
             rowIndex = 0;
             for (char c : line.toCharArray()) {
-                int count;
                 switch (c) {
                     case 'W':
                         movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.WALL);
-                        count = staticEntitiesCount.get(StaticEntity.WALL);
-                        staticEntitiesCount.replace(StaticEntity.WALL, count + 1);
+                        StaticEntity.WALL.addCount(1);
                         break;
                     case '1':
                         movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.GUM);
-                        count = staticEntitiesCount.get(StaticEntity.GUM);
-                        staticEntitiesCount.replace(StaticEntity.GUM, count + 1);
+                        StaticEntity.GUM.addCount(1);
                         break;
                     case '2':
                         movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.SUPER_GUM);
-                        count = staticEntitiesCount.get(StaticEntity.SUPER_GUM);
-                        staticEntitiesCount.replace(StaticEntity.SUPER_GUM, count + 1);
+                        StaticEntity.SUPER_GUM.addCount(1);
                         break;
                     case 'A':
                         movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.GATE);
-                        count = staticEntitiesCount.get(StaticEntity.SUPER_GUM);
-                        staticEntitiesCount.replace(StaticEntity.SUPER_GUM, count + 1);
+                        StaticEntity.GATE.addCount(1);
                         break;
                     case 'G':
                         movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.GHOST_HOME);
-                        count = staticEntitiesCount.get(StaticEntity.GHOST_HOME);
-                        staticEntitiesCount.replace(StaticEntity.GHOST_HOME, count + 1);
+                        StaticEntity.GHOST_HOME.addCount(1);
                         break;
                     case 'S':
                         movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.GHOST_SPAWN);
-                        count = staticEntitiesCount.get(StaticEntity.GHOST_SPAWN);
-                        staticEntitiesCount.replace(StaticEntity.GHOST_SPAWN, count + 1);
+                        StaticEntity.GHOST_SPAWN.addCount(1);
                         break;
                     case 'P':
                         movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.PLAYER_SPAWN);
-                        count = staticEntitiesCount.get(StaticEntity.PLAYER_SPAWN);
-                        staticEntitiesCount.replace(StaticEntity.PLAYER_SPAWN, count + 1);
+                        StaticEntity.PLAYER_SPAWN.addCount(1);
                         break;
                     case 'I':
                         movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.ITEM_SPAWN);
-                        count = staticEntitiesCount.get(StaticEntity.ITEM_SPAWN);
-                        staticEntitiesCount.replace(StaticEntity.ITEM_SPAWN, count + 1);
+                        StaticEntity.ITEM_SPAWN.addCount(1);
                         break;
                     case '0':
                     default:
                         movementMap.put(new Point(rowIndex, lineIndex), StaticEntity.EMPTY);
-                        count = staticEntitiesCount.get(StaticEntity.EMPTY);
-                        staticEntitiesCount.replace(StaticEntity.EMPTY, count + 1);
+                        StaticEntity.EMPTY.addCount(1);
                         break;
                 }
                 rowIndex++;

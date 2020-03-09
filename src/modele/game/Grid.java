@@ -22,7 +22,6 @@ public class Grid {
     private Loader loader;
 
     private Map<MoveableEntity, Point> entities;
-    private Map<StaticEntity, Integer> staticEntitiesCount;
     private Map<Point, StaticEntity> movementMap;
     private Map<MoveableEntity, Thread> threads;
 
@@ -32,7 +31,6 @@ public class Grid {
         threads = new HashMap<>();
         entities = new HashMap<>();
         movementMap = new HashMap<>();
-        staticEntitiesCount = new HashMap<>();
 
         entities.put(new EntityPlayer(this, 0), null);
 
@@ -46,7 +44,7 @@ public class Grid {
     }
 
     private void init(int level) {
-        Point size = loader.loadMap(this, movementMap, staticEntitiesCount, level);
+        Point size = loader.loadMap(movementMap, level);
         sizeX = size.x;
         sizeY = size.y;
 
@@ -182,11 +180,9 @@ public class Grid {
     }
 
     public void setStaticEntity(Point pos, StaticEntity type) {
-        int count = staticEntitiesCount.get(movementMap.get(pos));
-        staticEntitiesCount.replace(movementMap.get(pos), count - 1);
+        movementMap.get(pos).addCount(-1);
+        type.addCount(1);
         movementMap.replace(pos, type);
-        count = staticEntitiesCount.get(type);
-        staticEntitiesCount.replace(movementMap.get(pos), count + 1);
     }
 
     public boolean isType(Point pos, StaticEntity type) {
@@ -195,6 +191,6 @@ public class Grid {
     }
 
     public int getStaticEntityCount(StaticEntity type) {
-        return staticEntitiesCount.get(type);
+        return type.getCount();
     }
 }
