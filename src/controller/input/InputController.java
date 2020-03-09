@@ -1,8 +1,8 @@
 package controller.input;
 
+import controller.audio.AudioController;
 import controller.editor.fxml.EditorViewController;
 import controller.view.ViewController;
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -32,13 +32,16 @@ public class InputController {
 
     private boolean editorLaunched;
 
+    private AudioController audioController;
+
     private Map<Input, KeyCode> inputsMap;
 
-    public InputController(Game game, Menu menu, Loader loader) {
+    public InputController(Game game, Menu menu, Loader loader, AudioController audioController) {
         this.game = game;
         this.menu = menu;
         this.loader = loader;
         inputsMap = loader.loadConfigs();
+        this.audioController = audioController;
     }
 
     public KeyCode getKey(Input input) {
@@ -89,7 +92,7 @@ public class InputController {
                 switch (menu.getTab()) {
                     case MAIN:
                         if (mEvent != null) {
-                            Point mouseCoords = new Point((int) mEvent.getSceneX(), (int) mEvent.getSceneY());
+                            Point mouseCoords = new Point((int) (mEvent.getSceneX() / ViewController.SCALE), (int) (mEvent.getSceneY() / ViewController.SCALE));
                             if (Utils.isInside(mouseCoords, MenuTab.MAIN.getButton("1-player").getHitbox())) {
                                 game.setGameState(GameState.GAME_SCREEN);
                                 game.setNbPlayer(1);
@@ -138,8 +141,8 @@ public class InputController {
                                 selectedInput = Input.valueOf(id);
                             }
                         if (mEvent != null) {
+                            Point mouseCoords = new Point((int) (mEvent.getSceneX() / ViewController.SCALE), (int) (mEvent.getSceneY() / ViewController.SCALE));
                             if (!isButtonFocused) {
-                                Point mouseCoords = new Point((int) mEvent.getSceneX(), (int) mEvent.getSceneY());
                                 if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton("back").getHitbox()))
                                     menu.setTab(MenuTab.MAIN);
                                 if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.UP_P1.toString()).getHitbox())) {
@@ -185,13 +188,14 @@ public class InputController {
                                     MenuTab.CONTROLS.getButton(selectedInput.toString()).setText(kEvent.getCode().getName());
                                     loader.saveConfigs(inputsMap);
                                     currentCode = null;
-                                }
+                                } else
+                                    audioController.warning();
                             }
                         }
                         break;
                     case HIGHSCORE:
                         if (mEvent != null) {
-                            Point mouseCoords = new Point((int) mEvent.getSceneX(), (int) mEvent.getSceneY());
+                            Point mouseCoords = new Point((int) (mEvent.getSceneX() / ViewController.SCALE), (int) (mEvent.getSceneY() / ViewController.SCALE));
                             if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton("back").getHitbox()))
                                 menu.setTab(MenuTab.MAIN);
                         }

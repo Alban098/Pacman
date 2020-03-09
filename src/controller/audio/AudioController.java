@@ -14,7 +14,6 @@ import java.util.Observer;
 public class AudioController implements Observer {
 
     private Game game;
-    private Menu menu;
     private Map<AudioID, AudioChannel> audioChannels;
     private boolean canPlayIntro = true;
     private boolean canPlayEnd = true;
@@ -32,9 +31,9 @@ public class AudioController implements Observer {
         addChannel(AudioID.GHOST_FRIGHTENED, getClass().getResource("../../resources/audio/ghost-frightened.wav").getFile(), false);
         addChannel(AudioID.INTRO, getClass().getResource("../../resources/audio/ready.wav").getFile(), false);
         addChannel(AudioID.END, getClass().getResource("../../resources/audio/end.wav").getFile(), false);
+        addChannel(AudioID.WARNING, getClass().getResource("../../resources/audio/NO!.wav").getFile(), false);
 
         this.game = instance;
-        this.menu = menu;
         game.addObserver(this);
         menu.addObserver(this);
     }
@@ -50,6 +49,10 @@ public class AudioController implements Observer {
             e.printStackTrace();
             System.exit(-5);
         }
+    }
+
+    public synchronized void warning() {
+        playChannel(AudioID.WARNING);
     }
 
     private void playChannel(AudioID id) {

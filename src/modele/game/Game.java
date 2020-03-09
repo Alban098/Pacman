@@ -219,7 +219,6 @@ public class Game extends Observable implements Runnable {
     }
 
     private boolean allGumEaten() {
-        System.out.println(grid.getStaticEntityCount(StaticEntity.SUPER_GUM) + " " + grid.getStaticEntityCount(StaticEntity.GUM));
         return grid.getStaticEntityCount(StaticEntity.SUPER_GUM) + grid.getStaticEntityCount(StaticEntity.GUM) == 0;
     }
 

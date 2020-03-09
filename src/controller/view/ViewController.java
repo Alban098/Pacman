@@ -50,7 +50,7 @@ public class ViewController extends Application implements Observer {
     private static final byte MASK_WALL_DOWN =   0b0001;
     private static final byte MASK_GATE_UP =   0b010000;
     private static final byte MASK_GATE_LEFT = 0b100000;
-    private static final float SCALE = 1;
+    public static final float SCALE = 2;
 
     private Map<MoveableEntity, Sprite> foregroundSpriteMap;
     private Map<StaticEntity, Image> backgroundTileMap;
@@ -88,7 +88,7 @@ public class ViewController extends Application implements Observer {
         menu = new Menu(game);
 
         audioController = new AudioController(game, menu);
-        inputController = new InputController(game, menu, loader);
+        inputController = new InputController(game, menu, loader, audioController);
 
         menu.setInputController(inputController);
 

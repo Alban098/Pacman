@@ -25,7 +25,7 @@
         <row id="21">0WWWWWWWWWWWWWWWWWWW0</row>
         <row id="22">00000000W0W0W00000000</row>
     </map>
-    <map default="1" start="2" end="3" sizeX="21" sizeY="23">
+    <map start="2" end="3" sizeX="21" sizeY="23">
         <row id="0">0WWWWWWWWWWWWWWWWWWW0</row>
         <row id="1">0W11111111W11111111W0</row>
         <row id="2">0W2WW1WWW1W1WWW1WW2W0</row>

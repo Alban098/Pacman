@@ -10,5 +10,6 @@ public enum AudioID {
     EATING_FRUIT,
     EATING_GHOST,
     EXTRA_LIFE,
-    END;
+    END,
+    WARNING;
 }
