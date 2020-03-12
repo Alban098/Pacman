@@ -1,7 +1,7 @@
 package controller.input;
 
 import controller.audio.AudioController;
-import controller.editor.fxml.EditorViewController;
+import controller.editor.EditorViewController;
 import controller.view.ViewController;
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
@@ -22,25 +22,15 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.Map;
 
-
 public class InputController {
 
-    private Game game;
-    private Menu menu;
-    private Loader loader;
     private KeyCode currentCode;
-
     private boolean editorLaunched;
-
     private AudioController audioController;
-
     private Map<Input, KeyCode> inputsMap;
 
-    public InputController(Game game, Menu menu, Loader loader, AudioController audioController) {
-        this.game = game;
-        this.menu = menu;
-        this.loader = loader;
-        inputsMap = loader.loadConfigs();
+    public InputController(AudioController audioController) {
+        inputsMap = Loader.getInstance().loadConfigs();
         this.audioController = audioController;
     }
 
@@ -53,6 +43,7 @@ public class InputController {
     }
 
     public void handleInput(KeyEvent kEvent, MouseEvent mEvent, ViewController viewController) {
+        Game game = Game.getInstance();
         switch (game.getGameState()) {
             case GAME_SCREEN:
                 if (kEvent != null) {
@@ -83,18 +74,18 @@ public class InputController {
                     if (kEvent.getCode().equals(inputsMap.get(Input.ENTER)))
                         if (game.isGameFinished() && game.isPlayerDead() && viewController.isDeathAnimFinished) {
                             viewController.initButtons();
-                            game.setGameState(GameState.MENU_SCREEN);
-                            menu.setTab(MenuTab.HIGHSCORE_ENTER);
+                            game.runLater(() -> game.setGameState(GameState.MENU_SCREEN));
+                            Menu.getInstance().setTab(MenuTab.HIGHSCORE_ENTER);
                         }
                 }
                 break;
             case MENU_SCREEN:
-                switch (menu.getTab()) {
+                switch (Menu.getInstance().getTab()) {
                     case MAIN:
                         if (mEvent != null) {
                             Point mouseCoords = new Point((int) (mEvent.getSceneX() / ViewController.SCALE), (int) (mEvent.getSceneY() / ViewController.SCALE));
                             if (Utils.isInside(mouseCoords, MenuTab.MAIN.getButton("1-player").getHitbox())) {
-                                game.setGameState(GameState.GAME_SCREEN);
+                                game.runLater(() -> game.setGameState(GameState.GAME_SCREEN));
                                 game.setNbPlayer(1);
                                 viewController.resetSprites();
                                 viewController.whenToStopDeathAnim = System.currentTimeMillis() - 1;
@@ -102,7 +93,7 @@ public class InputController {
                                 viewController.audioController.canPlayIntro(true);
                             }
                             if (Utils.isInside(mouseCoords, MenuTab.MAIN.getButton("2-players").getHitbox())) {
-                                game.setGameState(GameState.GAME_SCREEN);
+                                game.runLater(() -> game.setGameState(GameState.GAME_SCREEN));
                                 game.setNbPlayer(2);
                                 viewController.resetSprites();
                                 viewController.whenToStopDeathAnim = System.currentTimeMillis() - 1;
@@ -110,16 +101,15 @@ public class InputController {
                                 viewController.audioController.canPlayIntro(true);
                             }
                             if (Utils.isInside(mouseCoords, MenuTab.MAIN.getButton("controls").getHitbox()))
-                                menu.setTab(MenuTab.CONTROLS);
+                                Menu.getInstance().setTab(MenuTab.CONTROLS);
                             if (Utils.isInside(mouseCoords, MenuTab.MAIN.getButton("highscore").getHitbox()))
-                                menu.setTab(MenuTab.HIGHSCORE);
+                                Menu.getInstance().setTab(MenuTab.HIGHSCORE);
                             if (Utils.isInside(mouseCoords, MenuTab.MAIN.getButton("editor").getHitbox())) {
                                 game.setGameState(GameState.LEVEL_EDITOR);
                                 if (!editorLaunched) {
                                     Runnable runnable = () -> {
                                         try {
                                             EditorViewController editorController = new EditorViewController();
-                                            editorController.setGame(game);
                                             editorController.setInputController(this);
                                             editorController.start(new Stage());
                                         } catch (IOException e) {
@@ -144,7 +134,7 @@ public class InputController {
                             Point mouseCoords = new Point((int) (mEvent.getSceneX() / ViewController.SCALE), (int) (mEvent.getSceneY() / ViewController.SCALE));
                             if (!isButtonFocused) {
                                 if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton("back").getHitbox()))
-                                    menu.setTab(MenuTab.MAIN);
+                                    Menu.getInstance().setTab(MenuTab.MAIN);
                                 if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton(Input.UP_P1.toString()).getHitbox())) {
                                     MenuTab.CONTROLS.getButton(Input.UP_P1.toString()).setSelected(true);
                                     currentCode = inputsMap.get(Input.UP_P1);
@@ -186,7 +176,7 @@ public class InputController {
                                     setKey(selectedInput, kEvent.getCode());
                                     MenuTab.CONTROLS.getButton(selectedInput.toString()).setSelected(false);
                                     MenuTab.CONTROLS.getButton(selectedInput.toString()).setText(kEvent.getCode().getName());
-                                    loader.saveConfigs(inputsMap);
+                                    Loader.getInstance().saveConfigs(inputsMap);
                                     currentCode = null;
                                 } else
                                     audioController.warning();
@@ -197,7 +187,7 @@ public class InputController {
                         if (mEvent != null) {
                             Point mouseCoords = new Point((int) (mEvent.getSceneX() / ViewController.SCALE), (int) (mEvent.getSceneY() / ViewController.SCALE));
                             if (Utils.isInside(mouseCoords, MenuTab.CONTROLS.getButton("back").getHitbox()))
-                                menu.setTab(MenuTab.MAIN);
+                                Menu.getInstance().setTab(MenuTab.MAIN);
                         }
                         break;
                     case HIGHSCORE_ENTER:
@@ -208,9 +198,9 @@ public class InputController {
                             else if (kEvent.getCode() == KeyCode.BACK_SPACE && button.getText().length() >= 1)
                                 button.setText(button.getText().substring(0, button.getText().length() - 1));
                             else if (kEvent.getCode().equals(inputsMap.get(Input.ENTER)) && button.getText().length() > 0) {
-                                game.addHighscore(new Score(game.getScoreToSave(), button.getText()));
-                                loader.saveHighscore(game.getHighscores());
-                                menu.setTab(MenuTab.MAIN);
+                                game.runLater(() -> game.addHighscore(new Score(game.getScoreToSave(), button.getText())));
+                                Loader.getInstance().saveHighscore(game.getHighscores());
+                                Menu.getInstance().setTab(MenuTab.MAIN);
                             }
                         }
                 }

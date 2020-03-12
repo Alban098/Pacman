@@ -13,12 +13,11 @@ import java.util.Observer;
 
 public class AudioController implements Observer {
 
-    private Game game;
     private Map<AudioID, AudioChannel> audioChannels;
     private boolean canPlayIntro = true;
     private boolean canPlayEnd = true;
 
-    public AudioController(Game instance, Menu menu) {
+    public AudioController() {
         audioChannels = new HashMap<>();
 
         addChannel(AudioID.DEATH, getClass().getResource("../../resources/audio/death.wav").getFile(), false);
@@ -33,9 +32,8 @@ public class AudioController implements Observer {
         addChannel(AudioID.END, getClass().getResource("../../resources/audio/end.wav").getFile(), false);
         addChannel(AudioID.WARNING, getClass().getResource("../../resources/audio/NO!.wav").getFile(), false);
 
-        this.game = instance;
-        game.addObserver(this);
-        menu.addObserver(this);
+        Game.getInstance().addObserver(this);
+        Menu.getInstance().addObserver(this);
     }
 
     public synchronized void canPlayIntro(boolean can) {
@@ -47,7 +45,7 @@ public class AudioController implements Observer {
             audioChannels.put(id, new AudioChannel(file, canRestart));
         } catch (UnsupportedAudioFileException | LineUnavailableException | IOException e) {
             e.printStackTrace();
-            System.exit(-5);
+            System.exit(-1);
         }
     }
 
@@ -69,6 +67,7 @@ public class AudioController implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
+        Game game = Game.getInstance();
         switch (game.getGameState()) {
             case GAME_SCREEN:
                 if (game.hasPlayerDied())

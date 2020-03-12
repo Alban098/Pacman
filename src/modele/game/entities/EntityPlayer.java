@@ -7,7 +7,6 @@ import modele.game.Game;
 public class EntityPlayer extends MoveableEntity implements Runnable {
 
     private int eatenGhostMultiplier = 1;
-    private int id;
     private boolean isDead = false;
     private boolean hasDied = false;
     private boolean hasEatenGhost = false;
@@ -16,26 +15,22 @@ public class EntityPlayer extends MoveableEntity implements Runnable {
     private boolean hasEatenGum = false;
     private int lives = 2;
 
-    public EntityPlayer(Grid grid, int id) {
+    public EntityPlayer(Grid grid) {
         super(grid);
-        this.id = id;
         requestedAction = Movement.NONE;
         currentDirection = Movement.NONE;
     }
 
-    public int getId() {
-        return id;
-    }
 
-    public int getEatenGhostMultiplier() {
+    public synchronized int getEatenGhostMultiplier() {
         return eatenGhostMultiplier;
     }
 
-    public void incrementEatenGhostMultiplier() {
+    public synchronized void incrementEatenGhostMultiplier() {
         eatenGhostMultiplier++;
     }
 
-    public void resetEatenGhostMultiplier() {
+    public synchronized void resetEatenGhostMultiplier() {
         eatenGhostMultiplier = 1;
     }
 
@@ -79,67 +74,67 @@ public class EntityPlayer extends MoveableEntity implements Runnable {
             this.isDead = false;
     }
 
-    public boolean isDead() {
+    public synchronized boolean isDead() {
         return isDead;
     }
 
-    public boolean hasDied() {
+    public synchronized boolean hasDied() {
         boolean tmp = hasDied;
         hasDied = false;
         return tmp;
     }
 
-    public boolean hasEatenGhost() {
+    public synchronized boolean hasEatenGhost() {
         boolean tmp = hasEatenGhost;
         hasEatenGhost = false;
         return tmp;
     }
 
-    public boolean hasEatenFruit() {
+    public synchronized boolean hasEatenFruit() {
         boolean tmp = hasEatenFruit;
         hasEatenFruit = false;
         return tmp;
     }
 
-    public boolean hasExtraLife() {
+    public synchronized boolean hasExtraLife() {
         boolean tmp = hasExtraLife;
         hasExtraLife = false;
         return tmp;
     }
 
-    public boolean hasEatenGum() {
+    public synchronized boolean hasEatenGum() {
         boolean tmp = hasEatenGum;
         hasEatenGum = false;
         return tmp;
     }
 
-    public void setDead(boolean dead) {
+    public synchronized void setDead(boolean dead) {
         if (dead)
             hasDied = true;
         isDead = dead;
     }
 
-    public void setHasEatenGhost() {
+    public synchronized void setHasEatenGhost() {
         this.hasEatenGhost = true;
     }
 
-    public void setHasEatenFruit() {
+    public synchronized void setHasEatenFruit() {
         this.hasEatenFruit = true;
     }
 
-    public void setHasExtraLife() {
+    public synchronized void setHasExtraLife() {
         this.hasExtraLife = true;
     }
 
-    public void setHasEatenGum() {
+    public synchronized void setHasEatenGum() {
         this.hasEatenGum = true;
     }
 
-    public int getLives() {
+    public synchronized int getLives() {
         return lives;
     }
 
-    public void setLives(int lives) {
+    public synchronized void setLives(int lives) {
         this.lives = lives;
     }
 }

@@ -6,6 +6,7 @@ import modele.game.Score;
 import modele.game.entities.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import controller.input.Input;
 
@@ -29,10 +30,18 @@ public class Loader {
     private String controlsFile;
     private String scoreFile;
 
-    public Loader(String mapFile, String configFile, String scoreFile) {
-        this.mapFile = mapFile;
-        this.controlsFile = configFile;
-        this.scoreFile = scoreFile;
+    private static Loader instance;
+
+    public static Loader getInstance() {
+        if (instance == null)
+            instance = new Loader();
+        return instance;
+    }
+
+    private Loader() {
+        this.mapFile = "map.xml";
+        this.controlsFile = "controls.xml";
+        this.scoreFile = "scores.xml";
     }
 
     public List<Score> loadHighscores() {
@@ -175,8 +184,7 @@ public class Loader {
         return inputsMap;
     }
 
-    public Point loadMap(Map<Point, StaticEntity> movementMap, int level) {
-
+    public void loadMap(Map<Point, StaticEntity> movementMap, int level) {
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             File fileXML = new File(mapFile);
@@ -200,22 +208,69 @@ public class Loader {
                     mapNode = e;
             }
             if (mapNode != null) {
-                return constructMap(movementMap, mapNode);
+                constructMap(movementMap, mapNode);
             } else {
                 if (defaultMapNode == null)
                     throw new Exception(mapFile + " file corrupted (Default map not found)");
-                return constructMap(movementMap,defaultMapNode);
+                constructMap(movementMap,defaultMapNode);
             }
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);
         }
-        return new Point(0, 0);
     }
 
-    private Point constructMap(Map<Point, StaticEntity> movementMap, Element xmlElement) throws Exception {
+    public int[] loadMap(Grid grid, int level) {
+        try {
+            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            File fileXML = new File(mapFile);
+            Document xml;
+
+            xml = builder.parse(fileXML);
+            Element maps = (Element)xml.getElementsByTagName("maps").item(0);
+            if (maps == null)
+                throw new Exception(mapFile + " file corrupted (maps node not found)");
+            NodeList mapList = maps.getElementsByTagName("map");
+            Element mapNode = null;
+            Element defaultMapNode = null;
+            int[] options = new int[3];
+            int[] defaultOptions = new int[3];
+            for (int i = 0; i < mapList.getLength(); i++) {
+                Element e = (Element) mapList.item(i);
+                int start = Integer.parseInt(e.getAttribute("start"));
+                int end = Integer.parseInt(e.getAttribute("end"));
+                boolean isDefault = e.hasAttribute("default");
+                if (isDefault) {
+                    defaultMapNode = e;
+                    defaultOptions = new int[]{start, end, isDefault ? 1 : 0};
+                }
+                if (level <= end && level >= start) {
+                    mapNode = e;
+                    options = new int[]{start, end, isDefault ? 1 : 0};
+                }
+            }
+            if (mapNode != null) {
+                constructMap(grid.getMovementMap(), mapNode);
+                grid.getDimension();
+                return options;
+            } else {
+                if (defaultMapNode == null)
+                    throw new Exception(mapFile + " file corrupted (Default map not found)");
+                constructMap(grid.getMovementMap(), defaultMapNode);
+                grid.getDimension();
+                return defaultOptions;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        return null;
+    }
+
+    private void constructMap(Map<Point, StaticEntity> movementMap, Element xmlElement) throws Exception {
+        movementMap.clear();
         int sizeY = Integer.parseInt(xmlElement.getAttribute("sizeY")) + 2;
-        int sizeX = Integer.parseInt(xmlElement.getAttribute("sizeX"));
         String[] mapAsString = new String[sizeY - 2];
         NodeList rows = xmlElement.getElementsByTagName("row");
         for (int i = 0; i < rows.getLength(); i++) {
@@ -295,6 +350,138 @@ public class Loader {
             movementMap.put(new Point(i, 0), StaticEntity.EMPTY);
             movementMap.put(new Point(i, 1), StaticEntity.EMPTY);
         }
-        return new Point(sizeX, sizeY);
     }
+
+    public void saveMap(Grid grid, int startLevel, int endLevel, boolean isDefault) {
+        try {
+            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            File fileXML = new File(mapFile);
+            Document xml = builder.parse(fileXML);
+            Element maps = (Element) xml.getElementsByTagName("maps").item(0);
+            Element newMaps = xml.createElement("maps");
+            if (maps == null)
+                throw new Exception(mapFile + " file corrupted (maps node not found)");
+            NodeList mapList = maps.getElementsByTagName("map");
+            boolean hasBeenInserted = false;
+            for (int i = 0; i < mapList.getLength(); i++) {
+                Element e = (Element) mapList.item(i).cloneNode(true);
+                int start = Integer.parseInt(e.getAttribute("start"));
+                int end = Integer.parseInt(e.getAttribute("end"));
+                if (isDefault && e.hasAttribute("default"))
+                    e.removeAttribute("default");
+                if (startLevel <= start && endLevel >= end) {// Old inside new
+                    continue;
+                } if (startLevel > start && endLevel < end) { // new inside old
+                    Element e2 = (Element) e.cloneNode(true);
+                    e.setAttribute("end", String.valueOf(startLevel - 1));
+                    if (!hasBeenInserted) newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                    e2.setAttribute("start", String.valueOf(endLevel + 1));
+                    newMaps.appendChild(e2);
+                    hasBeenInserted = true;
+                    newMaps.appendChild(e);
+                    continue;
+                } else if (startLevel >= start && endLevel < end) {
+                    if (!hasBeenInserted) newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                    e.setAttribute("start", String.valueOf(endLevel + 1));
+                    newMaps.appendChild(e);
+                    hasBeenInserted = true;
+                    newMaps.appendChild(e);
+                    continue;
+                } else if (startLevel > start && endLevel <= end) {
+                    e.setAttribute("end", String.valueOf(startLevel - 1));
+                    if (!hasBeenInserted) newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                    hasBeenInserted = true;
+                    newMaps.appendChild(e);
+                    continue;
+                }
+                if (startLevel <= start && endLevel >= start) { // new overlap left
+                    if (!hasBeenInserted) newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                    e.setAttribute("start", String.valueOf(endLevel + 1));
+                    hasBeenInserted = true;
+                    newMaps.appendChild(e);
+                    continue;
+                }
+                if (startLevel <= end && endLevel >= end) {  // new overlap right
+                    if (!hasBeenInserted) newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                    e.setAttribute("end", String.valueOf(startLevel - 1));
+                    hasBeenInserted = true;
+                    newMaps.appendChild(e);
+                    continue;
+                }
+                newMaps.appendChild(e);
+            }
+            if (!hasBeenInserted)
+                newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+            xml.removeChild(maps);
+            xml.appendChild(newMaps);
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            DOMSource domSource = new DOMSource(xml);
+            StreamResult streamResult = new StreamResult(new File(mapFile));
+            transformer.transform(domSource, streamResult);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+    }
+
+    private Node contructMapNode(Document document, Grid grid, int startLevel, int endLevel, boolean defaultMap) {
+        Point size = grid.getDimension();
+        String[] mapAsString = convertToStringArray(grid);
+        Element mapNode = document.createElement("map");
+        mapNode.setAttribute("sizeX", String.valueOf(size.x));
+        mapNode.setAttribute("sizeY", String.valueOf(size.y - 2));
+        mapNode.setAttribute("start", String.valueOf(startLevel));
+        mapNode.setAttribute("end", String.valueOf(endLevel));
+        if (defaultMap)
+            mapNode.setAttribute("default", String.valueOf(1));
+        for (int i = 0; i < mapAsString.length; i++) {
+            Element row = document.createElement("row");
+            row.setAttribute("id", String.valueOf(i));
+            row.setTextContent(mapAsString[i]);
+            mapNode.appendChild(row);
+        }
+        return mapNode;
+    }
+
+    private String[] convertToStringArray(Grid grid) {
+        String[] mapAsString = new String[grid.getSizeY() - 2];
+        for (int row = 2; row < grid.getSizeY(); row++) {
+            StringBuilder rowAsString = new StringBuilder();
+            for (int col = 0; col < grid.getSizeX(); col++) {
+                switch (grid.getStaticEntity(new Point(col, row))) {
+                    case WALL:
+                        rowAsString.append("W");
+                        break;
+                    case GUM:
+                        rowAsString.append("1");
+                        break;
+                    case SUPER_GUM:
+                        rowAsString.append("2");
+                        break;
+                    case GHOST_HOME:
+                        rowAsString.append("G");
+                        break;
+                    case GHOST_SPAWN:
+                        rowAsString.append("S");
+                        break;
+                    case PLAYER_SPAWN:
+                        rowAsString.append("P");
+                        break;
+                    case ITEM_SPAWN:
+                        rowAsString.append("I");
+                        break;
+                    case EMPTY:
+                        rowAsString.append("0");
+                        break;
+                    case GATE:
+                        rowAsString.append("A");
+                }
+            }
+            mapAsString[row - 2] = String.valueOf(rowAsString);
+        }
+        return mapAsString;
+    }
+
+
 }

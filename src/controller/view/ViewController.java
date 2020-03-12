@@ -5,13 +5,8 @@
  */
 package controller.view;
 
-import controller.editor.fxml.EditorViewController;
 import controller.input.Input;
 import controller.input.InputController;
-import controller.editor.fxml.Controller;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
@@ -24,7 +19,6 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
-import modele.Loader;
 import modele.Menu;
 import modele.Utils;
 import modele.game.Button;
@@ -50,7 +44,7 @@ public class ViewController extends Application implements Observer {
     private static final byte MASK_WALL_DOWN =   0b0001;
     private static final byte MASK_GATE_UP =   0b010000;
     private static final byte MASK_GATE_LEFT = 0b100000;
-    public static final float SCALE = 2;
+    public static final float SCALE = 1;
 
     private Map<MoveableEntity, Sprite> foregroundSpriteMap;
     private Map<StaticEntity, Image> backgroundTileMap;
@@ -61,15 +55,13 @@ public class ViewController extends Application implements Observer {
     private Canvas background;
     private Canvas gui;
 
-    private Game game;
-    private Menu menu;
-
     public AudioController audioController;
     private InputController inputController;
 
     public long whenToStopDeathAnim;
     public boolean isDeathAnimPlaying = false;
     public boolean isDeathAnimFinished = true;
+    public boolean backgroundHasBeenDrawn = false;
 
     public long whenToStopScoreAnim;
     boolean isScoreAnimPlaying = false;
@@ -82,20 +74,19 @@ public class ViewController extends Application implements Observer {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        Loader loader = new Loader("map.xml", "controls.xml", "scores.xml");
 
-        game = new Game(loader);
-        menu = new Menu(game);
+        Game game = Game.getInstance();
+        Menu menu = Menu.getInstance();
 
-        audioController = new AudioController(game, menu);
-        inputController = new InputController(game, menu, loader, audioController);
+        audioController = new AudioController();
+        inputController = new InputController(audioController);
 
-        menu.setInputController(inputController);
 
         renderer = () -> {
             primaryStage.setWidth(16 * game.getSizeX() * SCALE + 16);
             primaryStage.setHeight(16 * game.getSizeY() * SCALE + 39);
-
+            if (game.getGameState() != GameState.LEVEL_EDITOR)
+                inputController.setEditorLaunched(false);
             drawBackground();
             drawForeground();
             drawGUI();
@@ -153,6 +144,7 @@ public class ViewController extends Application implements Observer {
     }
 
     private void loadSprites() {
+        Game game = Game.getInstance();
         Sprite pacmanSprite = new Sprite();
         pacmanSprite.addImageAtlas(SpriteID.LEFT, 250, "resources/sprites/player/pacman_0.png", "resources/sprites/player/pacman_left_1.png", "resources/sprites/player/pacman_left_2.png", "resources/sprites/player/pacman_left_1.png");
         pacmanSprite.addImageAtlas(SpriteID.RIGHT, 250, "resources/sprites/player/pacman_0.png", "resources/sprites/player/pacman_right_1.png", "resources/sprites/player/pacman_right_2.png", "resources/sprites/player/pacman_right_1.png");
@@ -276,46 +268,50 @@ public class ViewController extends Application implements Observer {
     }
 
     public void resetSprites() {
-        for (MoveableEntity e : game.getEntities())
+        for (MoveableEntity e : Game.getInstance().getEntities())
             if (e instanceof EntityGhost || e instanceof EntityPlayer)
                 foregroundSpriteMap.get(e).getFrame(SpriteID.UP);
     }
 
     private void drawBackground() {
+        Game game = Game.getInstance();
         background.setWidth(16*game.getSizeX());
         background.setHeight(16*game.getSizeY());
         background.setScaleX(SCALE);
         background.setScaleY(SCALE);
         final GraphicsContext gc = background.getGraphicsContext2D();
         gc.setImageSmoothing(false);
-        gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, background.getWidth(), background.getHeight());
-        switch (game.getGameState()) {
-            case GAME_SCREEN:
-                for (int i = 0; i < game.getSizeX(); i++) {
-                    for (int j = 0; j < game.getSizeY(); j++) {
-                        Point pos = new Point(i, j);
-                        if (game.getTileType(pos) == StaticEntity.WALL) {
-                            gc.drawImage(wallTileMap.get(getWallMask(pos)), 16 * pos.x, 16 * pos.y);
-                        } else if (game.getTileType(pos) == StaticEntity.GATE) {
-                            if (game.getTileType(Movement.UP, pos) == StaticEntity.WALL || game.getTileType(Movement.UP, pos) == StaticEntity.GATE)
-                                gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * pos.y - 3, 16, 11);
-                            if (game.getTileType(Movement.DOWN, pos) == StaticEntity.WALL || game.getTileType(Movement.DOWN, pos) == StaticEntity.GATE)
-                                gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * pos.y - 3 + 11, 16, 11);
-                            if (game.getTileType(Movement.LEFT, pos) == StaticEntity.WALL || game.getTileType(Movement.LEFT, pos) == StaticEntity.GATE)
-                                gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3, 16 * pos.y, 11, 16);
-                            if (game.getTileType(Movement.RIGHT, pos) == StaticEntity.WALL || game.getTileType(Movement.RIGHT, pos) == StaticEntity.GATE)
-                                gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3 + 11, 16 * pos.y, 11, 16);
-                        } else {
-                            gc.drawImage(backgroundTileMap.get(game.getTileType(pos)), 16 * pos.x, 16 * pos.y);
+        if (!backgroundHasBeenDrawn) {
+            System.out.println("background");
+            gc.setFill(Color.BLACK);
+            gc.fillRect(0, 0, background.getWidth(), background.getHeight());
+            switch (game.getGameState()) {
+                case GAME_SCREEN:
+                    backgroundHasBeenDrawn = true;
+                    for (int i = 0; i < game.getSizeX(); i++) {
+                        for (int j = 0; j < game.getSizeY(); j++) {
+                            Point pos = new Point(i, j);
+                            if (game.getTileType(pos) == StaticEntity.WALL) {
+                                gc.drawImage(wallTileMap.get(getWallMask(pos)), 16 * pos.x, 16 * pos.y);
+                            } else if (game.getTileType(pos) == StaticEntity.GATE) {
+                                if (game.getTileType(Movement.UP, pos) == StaticEntity.WALL || game.getTileType(Movement.UP, pos) == StaticEntity.GATE)
+                                    gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * pos.y - 3, 16, 11);
+                                if (game.getTileType(Movement.DOWN, pos) == StaticEntity.WALL || game.getTileType(Movement.DOWN, pos) == StaticEntity.GATE)
+                                    gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * pos.y - 3 + 11, 16, 11);
+                                if (game.getTileType(Movement.LEFT, pos) == StaticEntity.WALL || game.getTileType(Movement.LEFT, pos) == StaticEntity.GATE)
+                                    gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3, 16 * pos.y, 11, 16);
+                                if (game.getTileType(Movement.RIGHT, pos) == StaticEntity.WALL || game.getTileType(Movement.RIGHT, pos) == StaticEntity.GATE)
+                                    gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3 + 11, 16 * pos.y, 11, 16);
+                            }
                         }
                     }
-                }
-                break;
+                    break;
+            }
         }
     }
 
     private void drawForeground() {
+        Game game = Game.getInstance();
         EntityPlayer player = game.getPlayer();
         foreground.setWidth(16*game.getSizeX());
         foreground.setHeight(16*game.getSizeY());
@@ -326,6 +322,14 @@ public class ViewController extends Application implements Observer {
         gc.clearRect(0, 0, foreground.getWidth(), foreground.getHeight());
         switch (game.getGameState()) {
             case GAME_SCREEN:
+                for (int i = 0; i < game.getSizeX(); i++) {
+                    for (int j = 0; j < game.getSizeY(); j++) {
+                        Point pos = new Point(i, j);
+                        if (game.getTileType(pos) != StaticEntity.GATE && game.getTileType(pos) != StaticEntity.WALL) {
+                            gc.drawImage(backgroundTileMap.get(game.getTileType(pos)), 16 * pos.x, 16 * pos.y);
+                        }
+                    }
+                }
                 if (!game.isPlayerDead()) {
                     for (MoveableEntity e : game.getEntities())
                         if (!(e instanceof FruitSpawner)) {
@@ -364,6 +368,9 @@ public class ViewController extends Application implements Observer {
     }
 
     private void drawGUI() {
+        Game game = Game.getInstance();
+        Menu menu = Menu.getInstance();
+
         gui.setWidth(16*game.getSizeX());
         gui.setHeight(16*game.getSizeY());
         gui.setScaleX(SCALE);
@@ -580,6 +587,7 @@ public class ViewController extends Application implements Observer {
     }
 
     private void drawSprite(MoveableEntity entity, GraphicsContext gc) {
+        Game game = Game.getInstance();
         if (entity == null)
             return;
         Point pos = game.getPosition(entity);
@@ -660,6 +668,7 @@ public class ViewController extends Application implements Observer {
     }
 
     private byte getWallMask(Point pos) {
+        Game game = Game.getInstance();
         byte mask = 0b0000;
         mask |= (game.getTileType(Movement.UP, pos) == StaticEntity.WALL ? MASK_WALL_UP : 0);
         mask |= (game.getTileType(Movement.DOWN, pos) == StaticEntity.WALL ? MASK_WALL_DOWN : 0);

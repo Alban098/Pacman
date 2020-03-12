@@ -19,11 +19,6 @@ public class CollisionManager {
         this.game = game;
 
         totalGum = grid.getStaticEntityCount(StaticEntity.GUM);
-
-
-        for (MoveableEntity e : grid.getEntities())
-            if (e instanceof FruitSpawner)
-                ((FruitSpawner) e).setGame(game);
     }
 
     public void testCollision() {
@@ -60,17 +55,16 @@ public class CollisionManager {
                 if (e instanceof EntityGhost && ((EntityGhost) e).getState() != GhostState.EATEN && ((EntityGhost) e).getState() != GhostState.STILL)
                     ((EntityGhost) e).setState(GhostState.FRIGHTENED);
             }
-        } else if (grid.getStaticEntity(pos) != StaticEntity.EMPTY && grid.getStaticEntity(pos) != StaticEntity.WALL) {
-            game.totalScore += grid.getStaticEntity(pos).getScore();
-            game.levelScore += grid.getStaticEntity(pos).getScore();
+        } else if (grid.getStaticEntity(pos) != StaticEntity.EMPTY && grid.getStaticEntity(pos) != StaticEntity.WALL && grid.getStaticEntity(pos) != StaticEntity.ITEM_SPAWN && grid.getStaticEntity(pos) != StaticEntity.GHOST_SPAWN && grid.getStaticEntity(pos) != StaticEntity.GHOST_HOME && grid.getStaticEntity(pos) != StaticEntity.PLAYER_SPAWN) {
             game.dynamicScore = -grid.getStaticEntity(pos).getScore();
             grid.setStaticEntity(pos, StaticEntity.EMPTY);
             player.setHasEatenFruit();
         }
         if (grid.getStaticEntityCount(StaticEntity.GUM) == (int)(totalGum * 0.6)) {
             for (MoveableEntity e : grid.getEntities())
-                if (e instanceof FruitSpawner)
+                if (e instanceof FruitSpawner) {
                     ((FruitSpawner) e).dispatchSpawnEvent();
+                }
         }
         if (game.lastLevelScore < Game.EXTRA_LIFE_THRESHOLD && game.levelScore >= Game.EXTRA_LIFE_THRESHOLD) {
             player.setLives(player.getLives() + 1);

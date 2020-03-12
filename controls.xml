@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <controls>
-    <input id="UP_P2">Z</input>
     <input id="DOWN_P2">S</input>
-    <input id="RIGHT_P2">D</input>
-    <input id="ENTER">Enter</input>
-    <input id="DOWN_P1">Down</input>
     <input id="LEFT_P2">Q</input>
-    <input id="RIGHT_P1">Right</input>
+    <input id="ENTER">Enter</input>
     <input id="LEFT_P1">Left</input>
+    <input id="RIGHT_P2">D</input>
+    <input id="UP_P2">Z</input>
     <input id="UP_P1">Up</input>
+    <input id="RIGHT_P1">Right</input>
+    <input id="DOWN_P1">Down</input>
 </controls>

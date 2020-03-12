@@ -7,21 +7,16 @@ import java.awt.*;
 
 public class FruitSpawner extends MoveableEntity {
 
-    private Game game;
     private boolean needToSpawnFruit = false;
 
     public FruitSpawner(Grid grid) {
         super(grid);
     }
 
-    public void setGame(Game game) {
-        this.game = game;
-    }
-
     @Override
     protected void update() {
         if (needToSpawnFruit) {
-            spawnFruit(game.getLevel());
+            spawnFruit(Game.getInstance().getLevel());
             needToSpawnFruit = false;
         }
     }
@@ -39,7 +34,7 @@ public class FruitSpawner extends MoveableEntity {
         running = true;
     }
 
-    protected void spawnFruit(int level) {
+    private void spawnFruit(int level) {
         Point pos = grid.getPosition(this);
         if (level <= 2)
             grid.setStaticEntity(pos, StaticEntity.CHERRY);
@@ -59,7 +54,7 @@ public class FruitSpawner extends MoveableEntity {
             grid.setStaticEntity(pos, StaticEntity.KEY);
     }
 
-    public void dispatchSpawnEvent() {
+    public synchronized void dispatchSpawnEvent() {
         needToSpawnFruit = true;
     }
 }

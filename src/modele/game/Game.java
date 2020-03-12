@@ -11,11 +11,10 @@ import modele.game.enums.GhostState;
 import modele.game.enums.Movement;
 import modele.game.entities.StaticEntity;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.awt.*;
-import java.util.Observable;
-import java.util.Set;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 public class Game extends Observable implements Runnable {
 
@@ -30,7 +29,11 @@ public class Game extends Observable implements Runnable {
     public static final int EXTRA_LIFE_THRESHOLD = 1500;
     public static final int START_LIVES = 3;
 
+    private static Game instance;
+
     private final Grid grid;
+
+    private ExecutorService worker;
 
     private boolean isGameFinished = false;
     private boolean isGameStarted = false;
@@ -42,7 +45,6 @@ public class Game extends Observable implements Runnable {
     protected int dynamicScore = 0;
     protected int nbPlayer;
 
-
     private long whenToRestart;
     private boolean closeGameRequested = false;
     private long nbUpdates = 0;
@@ -52,13 +54,23 @@ public class Game extends Observable implements Runnable {
     private GameState gameState;
     private List<Score> highscores;
 
-    public Game(Loader loader) {
-        grid = new Grid(loader);
+    public static Game getInstance() {
+        if (instance == null)
+            instance = new Game();
+        return instance;
+    }
+
+    public synchronized void runLater(Runnable runnable) {
+        worker.submit(runnable);
+    }
+
+    private Game() {
+        grid = new Grid();
         collisionManager = new CollisionManager(grid, this);
         whenToRestart = System.currentTimeMillis() + RESTART_DELAY - 1000;
         gameState = GameState.MENU_SCREEN;
         nbPlayer = 2;
-        highscores = loader.loadHighscores();
+        highscores = Loader.getInstance().loadHighscores();
     }
 
     @Override
@@ -113,7 +125,7 @@ public class Game extends Observable implements Runnable {
         return System.currentTimeMillis() - startTime;
     }
 
-    public boolean startGame() {
+    public synchronized boolean startGame() {
         if (System.currentTimeMillis() >= whenToRestart) {
             isGameStarted = true;
             getPlayer().setDead(false);
@@ -133,7 +145,7 @@ public class Game extends Observable implements Runnable {
         return false;
     }
 
-    public GameState getGameState() {
+    public synchronized GameState getGameState() {
         return gameState;
     }
 
@@ -156,15 +168,15 @@ public class Game extends Observable implements Runnable {
         this.gameState = gameState;
     }
 
-    public List<Score> getHighscores() {
+    public synchronized List<Score> getHighscores() {
         return highscores;
     }
 
-    public int getScoreToSave() {
+    public synchronized int getScoreToSave() {
         return scoreToSave;
     }
 
-    public void setNbPlayer(int nbPlayer) {
+    public synchronized void setNbPlayer(int nbPlayer) {
         this.nbPlayer = Utils.wrap(nbPlayer, 1, 2);
     }
 
@@ -202,23 +214,23 @@ public class Game extends Observable implements Runnable {
         return entity.getCurrentDirection();
     }
 
-    public boolean isGameFinished() {
+    public synchronized boolean isGameFinished() {
         return isGameFinished;
     }
 
-    public boolean isGameStarted() {
+    public synchronized boolean isGameStarted() {
         return isGameStarted;
     }
 
-    public boolean canStart() {
+    public synchronized boolean canStart() {
         return whenToRestart <= System.currentTimeMillis();
     }
 
-    public boolean isPlayerDead() {
+    public synchronized boolean isPlayerDead() {
         return getPlayer().isDead();
     }
 
-    private boolean allGumEaten() {
+    private synchronized boolean allGumEaten() {
         return grid.getStaticEntityCount(StaticEntity.SUPER_GUM) + grid.getStaticEntityCount(StaticEntity.GUM) == 0;
     }
 
@@ -226,7 +238,7 @@ public class Game extends Observable implements Runnable {
         closeGameRequested = true;
     }
 
-    public int getDynamicScoreEventValue() {
+    public synchronized int getDynamicScoreEventValue() {
         int temp = dynamicScore;
         dynamicScore = 0;
         return temp;
@@ -236,7 +248,7 @@ public class Game extends Observable implements Runnable {
         return getPlayer().getLives();
     }
 
-    public Point getPosition(MoveableEntity entity) {
+    public synchronized Point getPosition(MoveableEntity entity) {
         return grid.getPosition(entity);
     }
 
@@ -274,7 +286,7 @@ public class Game extends Observable implements Runnable {
         return grid.getStaticEntity(dir, pos);
     }
 
-    public int getTotalScore() {
+    public synchronized int getTotalScore() {
         return totalScore;
     }
 
@@ -294,7 +306,7 @@ public class Game extends Observable implements Runnable {
         }
     }
 
-    public int getLevel() {
+    public synchronized int getLevel() {
         return level;
     }
 
@@ -334,7 +346,7 @@ public class Game extends Observable implements Runnable {
         return false;
     }
 
-    public void addHighscore(Score score) {
+    public synchronized void addHighscore(Score score) {
         highscores.add(score);
         Collections.sort(highscores);
         Collections.reverse(highscores);

@@ -16,23 +16,20 @@ import java.util.Set;
 
 public class Grid {
 
-    private int sizeX;
-    private int sizeY;
-
-    private Loader loader;
-
     private Map<MoveableEntity, Point> entities;
     private Map<Point, StaticEntity> movementMap;
     private Map<MoveableEntity, Thread> threads;
 
-    public Grid(Loader loader) {
-        this.loader = loader;
+    private int sizeX;
+    private int sizeY;
+
+    public Grid() {
 
         threads = new HashMap<>();
         entities = new HashMap<>();
         movementMap = new HashMap<>();
 
-        entities.put(new EntityPlayer(this, 0), null);
+        entities.put(new EntityPlayer(this), null);
 
         int i = 0;
         for (GhostName name : GhostName.values()) {
@@ -44,15 +41,12 @@ public class Grid {
     }
 
     private void init(int level) {
-        Point size = loader.loadMap(movementMap, level);
-        sizeX = size.x;
-        sizeY = size.y;
-
+        Loader.getInstance().loadMap(movementMap, level);
         for (Point p : movementMap.keySet()) {
             if (getStaticEntity(p) == StaticEntity.ITEM_SPAWN) {
                 FruitSpawner fs = new FruitSpawner(this);
                 fs.setSpawnPoint(new Point(p.x, p.y));
-                entities.put(fs, null);
+                entities.put(fs, fs.getSpawnPoint());
             } else if (getStaticEntity(p) == StaticEntity.GHOST_HOME) {
                 for (MoveableEntity e : entities.keySet()) {
                     if (e instanceof EntityGhost)
@@ -75,33 +69,34 @@ public class Grid {
             entities.replace(e, e.getSpawnPoint());
             e.reset();
         }
+        getDimension();
     }
 
 
-    public void restart(int level) {
+    public synchronized void restart(int level) {
         init(level);
     }
 
-    public void startEntities() {
+    public synchronized void startEntities() {
         for (MoveableEntity e : entities.keySet()) {
             threads.put(e, new Thread(e));
             threads.get(e).start();
         }
     }
 
-    public void stopGame() {
+    public synchronized void stopGame() {
         for (MoveableEntity e : entities.keySet()) {
             e.kill();
         }
     }
 
-    public void resetEntity(MoveableEntity entity) {
+    public synchronized void resetEntity(MoveableEntity entity) {
         entities.replace(entity, entity.getSpawnPoint());
         entity.reset();
     }
 
 
-    public boolean canMove(Movement dir, MoveableEntity entity) {
+    public synchronized boolean canMove(Movement dir, MoveableEntity entity) {
         if (entity instanceof EntityPlayer)
             if (((EntityPlayer)entity).isDead())
                 return false;
@@ -115,25 +110,26 @@ public class Grid {
         return nextPos != StaticEntity.WALL && nextPos != StaticEntity.GATE;
     }
 
-    public void move(Movement dir, MoveableEntity entity) {
+    public synchronized void move(Movement dir, MoveableEntity entity) {
+        Point dimension = getDimension();
         Point pos = entities.get(entity);
         if (pos != null) {
             switch (dir) {
                 case UP:
                     if (canMove(dir, entity))
-                        entities.replace(entity, new Point(pos.x, Utils.wrap(pos.y - 1, 2, sizeY - 1)));
+                        entities.replace(entity, new Point(pos.x, Utils.wrap(pos.y - 1, 2, dimension.y - 1)));
                     break;
                 case DOWN:
                     if (canMove(dir, entity))
-                        entities.replace(entity, new Point(pos.x, Utils.wrap(pos.y + 1, 2, sizeY - 1)));
+                        entities.replace(entity, new Point(pos.x, Utils.wrap(pos.y + 1, 2, dimension.y - 1)));
                     break;
                 case LEFT:
                     if (canMove(dir, entity))
-                        entities.replace(entity, new Point(Utils.wrap(pos.x - 1, 0, sizeX - 1), pos.y));
+                        entities.replace(entity, new Point(Utils.wrap(pos.x - 1, 0, dimension.x - 1), pos.y));
                     break;
                 case RIGHT:
                     if (canMove(dir, entity))
-                        entities.replace(entity, new Point(Utils.wrap(pos.x + 1, 0, sizeX - 1), pos.y));
+                        entities.replace(entity, new Point(Utils.wrap(pos.x + 1, 0, dimension.x - 1), pos.y));
                     break;
                 case NONE:
                     break;
@@ -142,55 +138,115 @@ public class Grid {
     }
 
 
-    public int getSizeX() {
-        return sizeX;
+    public synchronized Point getDimension() {
+        Point size = new Point(0, 0);
+        for (Point p : movementMap.keySet()) {
+            if (p.x > size.x)
+                size.x = p.x;
+            if (p.y > size.y)
+                size.y = p.y;
+        }
+        size.x++;
+        size.y++;
+        sizeX = size.x;
+        sizeY = size.y;
+        return size;
     }
 
     public int getSizeY() {
         return sizeY;
     }
 
-    public Set<MoveableEntity> getEntities() {
+    public int getSizeX() {
+        return sizeX;
+    }
+
+    public synchronized Set<MoveableEntity> getEntities() {
         return entities.keySet();
     }
 
 
-    public Point getPosition(MoveableEntity entity) {
+    public synchronized Point getPosition(MoveableEntity entity) {
         return entities.get(entity);
     }
 
-    public StaticEntity getStaticEntity(Point pos) {
+    public synchronized StaticEntity getStaticEntity(Point pos) {
         return movementMap.get(pos);
     }
 
-    public StaticEntity getStaticEntity(Movement dir, Point pos) {
+    public synchronized StaticEntity getStaticEntity(Movement dir, Point pos) {
+        Point dimension = getDimension();
         switch (dir) {
             case UP:
-                return movementMap.get(new Point(pos.x, Utils.wrap(pos.y - 1, 2, sizeY - 1)));
+                return movementMap.get(new Point(pos.x, Utils.wrap(pos.y - 1, 2, dimension.y - 1)));
             case DOWN:
-                return movementMap.get(new Point(pos.x, Utils.wrap(pos.y + 1, 2, sizeY - 1)));
+                return movementMap.get(new Point(pos.x, Utils.wrap(pos.y + 1, 2, dimension.y - 1)));
             case LEFT:
-                return movementMap.get(new Point(Utils.wrap(pos.x - 1, 0, sizeX - 1), pos.y));
+                return movementMap.get(new Point(Utils.wrap(pos.x - 1, 0, dimension.x - 1), pos.y));
             case RIGHT:
-                return movementMap.get(new Point(Utils.wrap(pos.x + 1, 0, sizeX - 1), pos.y));
+                return movementMap.get(new Point(Utils.wrap(pos.x + 1, 0, dimension.x - 1), pos.y));
             case NONE:
                 return movementMap.get(new Point(pos.x, pos.y));
         }
         return null;
     }
 
-    public void setStaticEntity(Point pos, StaticEntity type) {
-        movementMap.get(pos).addCount(-1);
-        type.addCount(1);
-        movementMap.replace(pos, type);
+    public synchronized void setStaticEntity(Point pos, StaticEntity type) {
+        switch (type) {
+            case PLAYER_SPAWN:
+            case GHOST_HOME:
+            case GHOST_SPAWN:
+                for (Point p : movementMap.keySet()) {
+                    if (movementMap.get(p) == type) {
+                        movementMap.replace(p, StaticEntity.EMPTY);
+                        StaticEntity.EMPTY.addCount(1);
+                        break;
+                    }
+                }
+            default:
+                movementMap.get(pos).addCount(-1);
+                type.addCount(1);
+                movementMap.replace(pos, type);
+        }
     }
 
-    public boolean isType(Point pos, StaticEntity type) {
+    public synchronized boolean isType(Point pos, StaticEntity type) {
         StaticEntity e = movementMap.get(pos);
         return e == type;
     }
 
     public int getStaticEntityCount(StaticEntity type) {
         return type.getCount();
+    }
+
+    public synchronized void resize(int x, int y) {
+        if (x <= 0 || y <= 0)
+            return;
+        Point dimension = getDimension();
+        if (x < dimension.x) {
+            for (int i = dimension.x - 1; i >= x; i--)
+                for (int j = 0; j < dimension.y; j++)
+                    movementMap.remove(new Point(i, j));
+        } else if (x > dimension.x) {
+            for (int i = dimension.x; i < x; i++)
+                for (int j = 0; j < dimension.y; j++)
+                    movementMap.put(new Point(i, j), StaticEntity.EMPTY);
+        }
+
+        if (y < dimension.y) {
+            for (int i = dimension.y - 1; i >= y; i--)
+                for (int j = 0; j < dimension.x; j++)
+                    movementMap.remove(new Point(j, i));
+        } else if (y > dimension.y) {
+            for (int i = dimension.y; i < y; i++)
+                for (int j = 0; j < dimension.x; j++)
+                    movementMap.put(new Point(j, i), StaticEntity.EMPTY);
+        }
+        sizeX = x;
+        sizeY = y;
+    }
+
+    public synchronized Map<Point, StaticEntity> getMovementMap() {
+        return movementMap;
     }
 }
