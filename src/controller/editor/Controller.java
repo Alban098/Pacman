@@ -4,7 +4,6 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import modele.editor.Editor;
 import modele.game.Game;
@@ -15,48 +14,51 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
-    @FXML Button gate_bt;
+    @FXML ToggleButton gate_bt;
     @FXML TextField end_tb;
     @FXML Button save_bt;
-    @FXML Button fill_bt;
+    @FXML ToggleButton fill_bt;
     @FXML Button go_to_bt;
     @FXML CheckBox default_map_cb;
     @FXML TextField lvl_tb;
     @FXML Button exit_bt;
+    @FXML Button randomize_btn;
     @FXML TextField start_tb;
-    @FXML Button wall_bt;
-    @FXML Button gum_bt;
-    @FXML Button super_gum_bt;
-    @FXML Button ghost_home_bt;
-    @FXML Button ghost_spawn_bt;
-    @FXML Button player_spawn_bt;
-    @FXML Button item_spawn_bt;
-    @FXML Button eraser_bt;
+    @FXML ToggleButton wall_bt;
+    @FXML ToggleButton gum_bt;
+    @FXML ToggleButton super_gum_bt;
+    @FXML ToggleButton ghost_home_bt;
+    @FXML ToggleButton ghost_spawn_bt;
+    @FXML ToggleButton player_spawn_bt;
+    @FXML ToggleButton item_spawn_bt;
+    @FXML ToggleButton eraser_bt;
     @FXML Slider width_slider;
     @FXML Label width_label;
     @FXML Slider length_slider;
     @FXML Label length_label;
 
     @FXML public void width_slider_slide() {
-        String str = "Width : " + (int) width_slider.getValue();
+        String str = "Width : " + ((int) width_slider.getValue() * 2 + 1);
         width_label.setText(str);
         if (width_slider.getValue() != Editor.getInstance().getSizeX())
-            Editor.getInstance().runLater(() -> Editor.getInstance().resize((int) width_slider.getValue(), (int) length_slider.getValue()));
+            Editor.getInstance().runLater(() -> Editor.getInstance().resize((int) width_slider.getValue() * 2 + 1, (int) length_slider.getValue() * 2 + 1));
     }
 
     @FXML public void length_slider_slide() {
-        String str = "Height : " + (int) length_slider.getValue();
+        String str = "Height : " + ((int) length_slider.getValue() * 2 - 1);
         length_label.setText(str);
         if (length_slider.getValue() != Editor.getInstance().getSizeY())
-            Editor.getInstance().runLater(() -> Editor.getInstance().resize((int) width_slider.getValue(), (int) length_slider.getValue()));
+            Editor.getInstance().runLater(() -> Editor.getInstance().resize((int) width_slider.getValue() * 2 + 1, (int) length_slider.getValue() * 2 + 1));
     }
 
     @FXML public void builder_selected(){
-        Editor.getInstance().setSelectedEntity(null);
     }
 
     @FXML public void options_selected(){
-        Editor.getInstance().setSelectedEntity(null);
+    }
+
+    @FXML public void randomize_btn_click(){
+        Editor.getInstance().runLater(() -> Editor.getInstance().generate((int) width_slider.getValue() * 2 - 3, (int) length_slider.getValue() * 2 - 5));
     }
 
     @FXML public void wall_bt_click(){
@@ -113,9 +115,9 @@ public class Controller implements Initializable {
                 default_map_cb.setSelected(Editor.getInstance().isDefault());
 
                 width_label.setText("Width : " + Editor.getInstance().getSizeX());
-                width_slider.setValue(Editor.getInstance().getSizeX());
-                length_label.setText("Height : " + Editor.getInstance().getSizeY());
-                length_slider.setValue(Editor.getInstance().getSizeY());
+                width_slider.setValue((Editor.getInstance().getSizeX() - 1) / 2);
+                length_label.setText("Height : " + (Editor.getInstance().getSizeY() - 2));
+                length_slider.setValue((Editor.getInstance().getSizeY() - 1) / 2);
             });
         });
     }
@@ -155,10 +157,20 @@ public class Controller implements Initializable {
                 default_map_cb.setSelected(Editor.getInstance().isDefault());
 
                 width_label.setText("Width : " + Editor.getInstance().getSizeX());
-                width_slider.setValue(Editor.getInstance().getSizeX());
-                length_label.setText("Height : " + Editor.getInstance().getSizeY());
-                length_slider.setValue(Editor.getInstance().getSizeY());
+                width_slider.setValue((Editor.getInstance().getSizeX() - 1) / 2);
+                length_label.setText("Height : " + (Editor.getInstance().getSizeY() - 2));
+                length_slider.setValue((Editor.getInstance().getSizeY() - 1) / 2);
             });
         });
+        ToggleGroup group = new ToggleGroup();
+        wall_bt.setToggleGroup(group);
+        gum_bt.setToggleGroup(group);
+        super_gum_bt.setToggleGroup(group);
+        ghost_home_bt.setToggleGroup(group);
+        ghost_spawn_bt.setToggleGroup(group);
+        player_spawn_bt.setToggleGroup(group);
+        item_spawn_bt.setToggleGroup(group);
+        eraser_bt.setToggleGroup(group);
+        gate_bt.setToggleGroup(group);
     }
 }

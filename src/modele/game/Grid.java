@@ -2,6 +2,7 @@ package modele.game;
 
 import modele.Loader;
 import modele.Utils;
+import modele.editor.MapGenerator;
 import modele.game.entities.*;
 import modele.game.enums.GhostName;
 import modele.game.enums.GhostState;
@@ -138,7 +139,7 @@ public class Grid {
     }
 
 
-    public synchronized Point getDimension() {
+    public Point getDimension() {
         Point size = new Point(0, 0);
         for (Point p : movementMap.keySet()) {
             if (p.x > size.x)
@@ -223,30 +224,37 @@ public class Grid {
         if (x <= 0 || y <= 0)
             return;
         Point dimension = getDimension();
-        if (x < dimension.x) {
-            for (int i = dimension.x - 1; i >= x; i--)
-                for (int j = 0; j < dimension.y; j++)
-                    movementMap.remove(new Point(i, j));
-        } else if (x > dimension.x) {
+        System.out.println(dimension + " / " + x + " " + y);
+        Map<Point, StaticEntity> newMap = new HashMap<>();
+        for (int i = 0; i < Math.min(x, dimension.x); i++) {
+            for (int j = 0; j < Math.min(y, dimension.y); j++) {
+                newMap.put(new Point(i, j), getStaticEntity(new Point(i, j)));
+            }
+        }
+        if (x > dimension.x) {
             for (int i = dimension.x; i < x; i++)
-                for (int j = 0; j < dimension.y; j++)
-                    movementMap.put(new Point(i, j), StaticEntity.EMPTY);
+                for (int j = 0; j < dimension.y; j++) {
+                    newMap.put(new Point(i, j), StaticEntity.EMPTY);
+                }
         }
 
-        if (y < dimension.y) {
-            for (int i = dimension.y - 1; i >= y; i--)
-                for (int j = 0; j < dimension.x; j++)
-                    movementMap.remove(new Point(j, i));
-        } else if (y > dimension.y) {
+        if (y > dimension.y) {
             for (int i = dimension.y; i < y; i++)
-                for (int j = 0; j < dimension.x; j++)
-                    movementMap.put(new Point(j, i), StaticEntity.EMPTY);
+                for (int j = 0; j < dimension.x; j++) {
+                    newMap.put(new Point(j, i), StaticEntity.EMPTY);
+                }
         }
-        sizeX = x;
-        sizeY = y;
+        movementMap = newMap;
+        getDimension();
     }
 
     public synchronized Map<Point, StaticEntity> getMovementMap() {
         return movementMap;
+    }
+
+    public synchronized void random(int x, int y) {
+        MapGenerator generator = new MapGenerator();
+        generator.generateMap(x, y, movementMap);
+        getDimension();
     }
 }

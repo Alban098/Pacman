@@ -15,6 +15,7 @@ import java.util.*;
 import java.awt.*;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Game extends Observable implements Runnable {
 
@@ -71,6 +72,7 @@ public class Game extends Observable implements Runnable {
         gameState = GameState.MENU_SCREEN;
         nbPlayer = 2;
         highscores = Loader.getInstance().loadHighscores();
+        worker = Executors.newSingleThreadExecutor();
     }
 
     @Override

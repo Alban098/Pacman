@@ -39,8 +39,7 @@ public class EditorViewController extends Application implements Observer {
     private Map<StaticEntity, Image> backgroundTileMap;
     private Map<Byte, Image> wallTileMap;
 
-    private Canvas foreground;
-    private Canvas wallMap;
+    private Canvas background;
     private InputController inputController;
     private Runnable renderer;
 
@@ -51,16 +50,12 @@ public class EditorViewController extends Application implements Observer {
         backgroundTileMap = new HashMap<>();
         wallTileMap = new HashMap<>();
 
-        foreground = new Canvas(16*editor.getSizeX(), 16*(editor.getSizeY() - 2));
-        wallMap = new Canvas(16*editor.getSizeX(), 16*(editor.getSizeY() - 2));
-        StackPane sp = new StackPane();
-        sp.getChildren().add(foreground);
-        sp.getChildren().add(wallMap);
+        background = new Canvas(16*editor.getSizeX(), 16*(editor.getSizeY() - 2));
 
         BorderPane bp = new BorderPane();
 
         bp.setLeft(FXMLLoader.load(getClass().getResource("/controller/editor/mapEditor.fxml")));
-        bp.setRight(sp);
+        bp.setRight(background);
 
         StackPane root = new StackPane();
         root.getChildren().add(bp);
@@ -71,6 +66,7 @@ public class EditorViewController extends Application implements Observer {
             Game.getInstance().runLater(() -> Game.getInstance().setGameState(GameState.MENU_SCREEN));
             inputController.setEditorLaunched(false);
         });
+        primaryStage.getIcons().add(new Image("resources/sprites/items/cherry.png"));
         primaryStage.setScene(scene);
         primaryStage.initStyle(StageStyle.DECORATED);
         primaryStage.setResizable(false);
@@ -82,8 +78,10 @@ public class EditorViewController extends Application implements Observer {
         renderer = () -> {
             Platform.runLater(() ->  {
                 primaryStage.sizeToScene();
-                drawBackgroundDiff();
-                drawForeground();
+                if (Editor.getInstance().hasResized())
+                    drawBackground();
+                else
+                    drawPartialBackground();
             });
         };
 
@@ -106,6 +104,7 @@ public class EditorViewController extends Application implements Observer {
         editor.addObserver(this);
         new Thread(editor).start();
         root.requestFocus();
+        drawBackground();
     }
 
     public synchronized void setInputController(InputController inputController) {
@@ -118,7 +117,7 @@ public class EditorViewController extends Application implements Observer {
         backgroundTileMap.put(StaticEntity.SUPER_GUM, new Image("resources/sprites/map/super_gum.png"));
         backgroundTileMap.put(StaticEntity.ITEM_SPAWN, new Image("resources/sprites/items/cherry.png"));
         backgroundTileMap.put(StaticEntity.PLAYER_SPAWN, new Image("resources/sprites/player/pacman_right_1.png"));
-        backgroundTileMap.put(StaticEntity.GHOST_SPAWN, new Image("resources/sprites/ghost/blinky_up_1.png"));
+        backgroundTileMap.put(StaticEntity.GHOST_SPAWN, new Image("resources/sprites/ghost/blinky_right_1.png"));
         backgroundTileMap.put(StaticEntity.GHOST_HOME, new Image("resources/sprites/ghost/frightened_0.png"));
 
         wallTileMap.put(MASK_GATE_UP, new Image("resources/sprites/map/gate_v.png"));
@@ -141,47 +140,48 @@ public class EditorViewController extends Application implements Observer {
         wallTileMap.put((byte) (MASK_WALL_LEFT | MASK_WALL_UP | MASK_WALL_RIGHT | MASK_WALL_DOWN), new Image("resources/sprites/map/wall_all.png"));
     }
 
-    private void drawBackgroundDiff() {
+    private void drawPartialBackground() {
         Editor editor = Editor.getInstance();
-        wallMap.setWidth(16 * editor.getSizeX());
-        wallMap.setHeight(16 * (editor.getSizeY() - 2));
-        wallMap.setScaleX(SCALE);
-        wallMap.setScaleY(SCALE);
-        if (editor.hasChangedPositions()) {
-            final GraphicsContext gc = wallMap.getGraphicsContext2D();
-            while (editor.hasChangedPositions()) {
-                Point pos = editor.pollChangedPosition();
-                if (pos == null) {
-                    drawBackground();
-                    break;
-                }
-                gc.clearRect(16 * pos.x+.5, 16 * (pos.y - 2)+.5, 15, 15);
-                if (editor.getTileType(pos) == StaticEntity.WALL) {
-                    gc.drawImage(wallTileMap.get(getWallMask(pos)), 16 * pos.x, 16 * (pos.y - 2));
-                } else if (editor.getTileType(pos) == StaticEntity.GATE) {
-                    if (editor.getTileType(Movement.UP, pos) == StaticEntity.WALL || editor.getTileType(Movement.UP, pos) == StaticEntity.GATE)
-                        gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * (pos.y - 2) - 3, 16, 11);
-                    if (editor.getTileType(Movement.DOWN, pos) == StaticEntity.WALL || editor.getTileType(Movement.DOWN, pos) == StaticEntity.GATE)
-                        gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * (pos.y - 2) - 3 + 11, 16, 11);
-                    if (editor.getTileType(Movement.LEFT, pos) == StaticEntity.WALL || editor.getTileType(Movement.LEFT, pos) == StaticEntity.GATE)
-                        gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3, 16 * (pos.y - 2), 11, 16);
-                    if (editor.getTileType(Movement.RIGHT, pos) == StaticEntity.WALL || editor.getTileType(Movement.RIGHT, pos) == StaticEntity.GATE)
-                        gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3 + 11, 16 * (pos.y - 2), 11, 16);
-                }
+        background.setWidth(16 * editor.getSizeX());
+        background.setHeight(16 * (editor.getSizeY() - 2));
+        background.setScaleX(SCALE);
+        background.setScaleY(SCALE);
+        final GraphicsContext gc = background.getGraphicsContext2D();
+        while (editor.hasChangedPositions()) {
+            Point pos = editor.pollChangedPosition();
+            if (pos == null) {
+                drawBackground();
+                break;
+            }
+            gc.setFill(Color.BLACK);
+            gc.fillRect(16 * pos.x, 16 * (pos.y - 2), 16, 16);
+            if (editor.getTileType(pos) == StaticEntity.WALL) {
+                gc.drawImage(wallTileMap.get(getWallMask(pos)), 16 * pos.x, 16 * (pos.y - 2));
+            } else if (editor.getTileType(pos) == StaticEntity.GATE) {
+                if (editor.getTileType(Movement.UP, pos) == StaticEntity.WALL || editor.getTileType(Movement.UP, pos) == StaticEntity.GATE)
+                    gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * (pos.y - 2) - 3, 16, 11);
+                if (editor.getTileType(Movement.DOWN, pos) == StaticEntity.WALL || editor.getTileType(Movement.DOWN, pos) == StaticEntity.GATE)
+                    gc.drawImage(wallTileMap.get(MASK_GATE_UP), 16 * pos.x, 16 * (pos.y - 2) - 3 + 11, 16, 11);
+                if (editor.getTileType(Movement.LEFT, pos) == StaticEntity.WALL || editor.getTileType(Movement.LEFT, pos) == StaticEntity.GATE)
+                    gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3, 16 * (pos.y - 2), 11, 16);
+                if (editor.getTileType(Movement.RIGHT, pos) == StaticEntity.WALL || editor.getTileType(Movement.RIGHT, pos) == StaticEntity.GATE)
+                    gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3 + 11, 16 * (pos.y - 2), 11, 16);
+            } else if (editor.getTileType(pos) != StaticEntity.GATE && editor.getTileType(pos) != StaticEntity.WALL) {
+                gc.drawImage(backgroundTileMap.get(editor.getTileType(pos)), 16 * pos.x, 16 * (pos.y - 2));
             }
         }
     }
 
     private void drawBackground() {
         Editor editor = Editor.getInstance();
-        wallMap.setWidth(16*editor.getSizeX());
-        wallMap.setHeight(16*(editor.getSizeY() - 2));
-        wallMap.setScaleX(SCALE);
-        wallMap.setScaleY(SCALE);
-        final GraphicsContext gc = wallMap.getGraphicsContext2D();
+        background.setWidth(16*editor.getSizeX());
+        background.setHeight(16*(editor.getSizeY() - 2));
+        background.setScaleX(SCALE);
+        background.setScaleY(SCALE);
+        final GraphicsContext gc = background.getGraphicsContext2D();
         gc.setImageSmoothing(false);
-        gc.setFill(Color.TRANSPARENT);
-        gc.fillRect(0, 0, foreground.getWidth(), foreground.getHeight());
+        gc.setFill(Color.BLACK);
+        gc.fillRect(0, 0, background.getWidth(), background.getHeight());
         for (int i = 0; i < editor.getSizeX(); i++) {
             for (int j = 2; j < editor.getSizeY(); j++) {
                 Point pos = new Point(i, j);
@@ -196,25 +196,7 @@ public class EditorViewController extends Application implements Observer {
                         gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3, 16 * (pos.y - 2), 11, 16);
                     if (editor.getTileType(Movement.RIGHT, pos) == StaticEntity.WALL || editor.getTileType(Movement.RIGHT, pos) == StaticEntity.GATE)
                         gc.drawImage(wallTileMap.get(MASK_GATE_LEFT), 16 * pos.x - 3 + 11, 16 * (pos.y - 2), 11, 16);
-                }
-            }
-        }
-    }
-
-    private void drawForeground() {
-        Editor editor = Editor.getInstance();
-        foreground.setWidth(16*editor.getSizeX());
-        foreground.setHeight(16*(editor.getSizeY() - 2));
-        foreground.setScaleX(SCALE);
-        foreground.setScaleY(SCALE);
-        final GraphicsContext gc = foreground.getGraphicsContext2D();
-        gc.setImageSmoothing(false);
-        gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, foreground.getWidth(), foreground.getHeight());
-        for (int i = 0; i < editor.getSizeX(); i++) {
-            for (int j = 2; j < editor.getSizeY(); j++) {
-                Point pos = new Point(i, j);
-                if (editor.getTileType(pos) != StaticEntity.GATE && editor.getTileType(pos) != StaticEntity.WALL) {
+                } else if (editor.getTileType(pos) != StaticEntity.GATE && editor.getTileType(pos) != StaticEntity.WALL) {
                     gc.drawImage(backgroundTileMap.get(editor.getTileType(pos)), 16 * pos.x, 16 * (pos.y - 2));
                 }
             }

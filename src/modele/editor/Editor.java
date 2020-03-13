@@ -9,7 +9,6 @@ import modele.game.enums.Movement;
 
 import java.awt.*;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,22 +26,23 @@ public class Editor extends Observable implements Runnable {
     private Point levelInterval;
     private boolean isDefault;
     private boolean fillingMode;
+    private boolean hasResized;
 
-    private Queue<Point> changedPosition;
+    private Stack<Point> changedPosition;
 
     private Editor() {
         grid = new Grid();
         levelInterval = new Point(1, 1);
-        worker = Executors.newWorkStealingPool();
-        changedPosition = new LinkedList<>();
+        worker = Executors.newSingleThreadExecutor();
+        changedPosition = new Stack<>();
     }
 
     public Point pollChangedPosition() {
-        return changedPosition.poll();
+        return changedPosition.pop();
     }
 
     public boolean hasChangedPositions() {
-        return changedPosition.size() > 0;
+        return !changedPosition.isEmpty();
     }
 
     public synchronized void runLater(Runnable runnable) {
@@ -68,8 +68,14 @@ public class Editor extends Observable implements Runnable {
         notifyObservers();
     }
 
-    public void resize(int x, int y) {
+    public synchronized void resize(int x, int y) {
         grid.resize(x, y);
+        hasResized = true;
+    }
+
+    public synchronized void generate(int x, int y) {
+        grid.random(x, y);
+        hasResized = true;
     }
 
     public synchronized int getSizeX() {
@@ -84,12 +90,25 @@ public class Editor extends Observable implements Runnable {
     public void setTileType(Point pos) {
         StaticEntity e = grid.getStaticEntity(pos);
         if (e != null && selectedEntity != null && e != selectedEntity) {
-            grid.setStaticEntity(pos, selectedEntity);
-            changedPosition.add(pos);
-            changedPosition.add(new Point(pos.x, Utils.wrap(pos.y - 1, 2, grid.getSizeY() - 1)));
-            changedPosition.add(new Point(pos.x, Utils.wrap(pos.y + 1, 2, grid.getSizeY() - 1)));
-            changedPosition.add(new Point(Utils.wrap(pos.x - 1, 0, grid.getSizeX() - 1), pos.y));
-            changedPosition.add(new Point(Utils.wrap(pos.x + 1, 0, grid.getSizeX() - 1), pos.y));
+            switch (selectedEntity) {
+                case PLAYER_SPAWN:
+                case GHOST_HOME:
+                case GHOST_SPAWN:
+                    Map<Point, StaticEntity> movementMap = grid.getMovementMap();
+                    for (Point pt : movementMap.keySet()) {
+                        if (movementMap.get(pt) == selectedEntity) {
+                            changedPosition.push(pt);
+                            break;
+                        }
+                    }
+                default:
+                    grid.setStaticEntity(pos, selectedEntity);
+                    changedPosition.push(pos);
+                    changedPosition.push(new Point(pos.x, Utils.wrap(pos.y - 1, 2, grid.getSizeY() - 1)));
+                    changedPosition.push(new Point(pos.x, Utils.wrap(pos.y + 1, 2, grid.getSizeY() - 1)));
+                    changedPosition.push(new Point(Utils.wrap(pos.x - 1, 0, grid.getSizeX() - 1), pos.y));
+                    changedPosition.push(new Point(Utils.wrap(pos.x + 1, 0, grid.getSizeX() - 1), pos.y));
+            }
         }
     }
 
@@ -119,6 +138,7 @@ public class Editor extends Observable implements Runnable {
          levelInterval.x = options[0];
          levelInterval.y = options[1];
          isDefault = options[2] == 1;
+         hasResized = true;
     }
 
     public boolean isFillingMode() {
@@ -151,5 +171,11 @@ public class Editor extends Observable implements Runnable {
 
     public synchronized void requestClose() {
         closeEditorRequested = true;
+    }
+
+    public synchronized boolean hasResized() {
+        boolean tmp = hasResized;
+        hasResized = false;
+        return tmp;
     }
 }

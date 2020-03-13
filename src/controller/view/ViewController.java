@@ -121,6 +121,7 @@ public class ViewController extends Application implements Observer {
             menu.requestClose();
             System.exit(0);
         });
+        primaryStage.getIcons().add(new Image("resources/sprites/player/pacman_right_1.png"));
         primaryStage.setScene(scene);
         primaryStage.initStyle(StageStyle.DECORATED);
         primaryStage.setResizable(false);
@@ -282,7 +283,6 @@ public class ViewController extends Application implements Observer {
         final GraphicsContext gc = background.getGraphicsContext2D();
         gc.setImageSmoothing(false);
         if (!backgroundHasBeenDrawn) {
-            System.out.println("background");
             gc.setFill(Color.BLACK);
             gc.fillRect(0, 0, background.getWidth(), background.getHeight());
             switch (game.getGameState()) {
