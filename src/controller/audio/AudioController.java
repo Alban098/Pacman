@@ -36,10 +36,20 @@ public class AudioController implements Observer {
         Menu.getInstance().addObserver(this);
     }
 
+    /**
+     * Set whether or not the controller can play the Intro Channel
+     * @param can can the controller play the Intro Channel
+     */
     public synchronized void canPlayIntro(boolean can) {
         this.canPlayIntro = can;
     }
 
+    /**
+     * Add a new AudioChannel to the controller
+     * @param id the AudioID of the channel
+     * @param file the audio file to be loaded
+     * @param canRestart can the channel be restarted mid-play
+     */
     public synchronized void addChannel(AudioID id, String file, boolean canRestart) {
         try {
             audioChannels.put(id, new AudioChannel(file, canRestart));
@@ -49,22 +59,40 @@ public class AudioController implements Observer {
         }
     }
 
+    /**
+     * Play a warning sound
+     */
     public synchronized void warning() {
         playChannel(AudioID.WARNING);
     }
 
+    /**
+     * Play a specified AudioChannel
+     * @param id the AudioChannel's AudioID
+     */
     private void playChannel(AudioID id) {
         audioChannels.get(id).play();
     }
 
+    /**
+     * Loop a specified AudioChannel
+     * @param id the AudioChannel's AudioID
+     */
     private void loopChannel(AudioID id) {
         audioChannels.get(id).loop();
     }
 
+    /**
+     * Pause a specified AudioChannel
+     * @param id the AudioChannel's AudioID
+     */
     private void pauseChannel(AudioID id) {
         audioChannels.get(id).pause();
     }
 
+    /**
+     * Update the controller and play the appropriated AudioChannel
+     */
     @Override
     public void update(Observable o, Object arg) {
         Game game = Game.getInstance();

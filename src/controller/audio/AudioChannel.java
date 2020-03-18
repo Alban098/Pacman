@@ -23,6 +23,9 @@ public class AudioChannel {
         status = Status.PAUSED;
     }
 
+    /**
+     * Pause the audio channel
+     */
     public void pause() {
         if (status == Status.PLAYING) {
             clip.stop();
@@ -30,6 +33,9 @@ public class AudioChannel {
         }
     }
 
+    /**
+     * Play the audio channel from the start
+     */
     public void play() {
         if (canRestart || clip.getMicrosecondPosition() >= clip.getMicrosecondLength() || clip.getMicrosecondPosition() == 0) {
             status = Status.PLAYING;
@@ -39,6 +45,9 @@ public class AudioChannel {
         }
     }
 
+    /**
+     * Play the audio channel until paused
+     */
     public void loop() {
         if (status == Status.PAUSED) {
             status = Status.PLAYING;

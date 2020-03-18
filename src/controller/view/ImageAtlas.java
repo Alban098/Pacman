@@ -17,15 +17,26 @@ public class ImageAtlas {
         animationStart = System.currentTimeMillis();
     }
 
+    /**
+     * Initialize the starting time of the animation
+     */
     public void startAnimation() {
         animationStart = System.currentTimeMillis();
     }
 
+    /**
+     * Return the current Frame the animation
+     * @return the correct Image to draw
+     */
     public Image getImage() {
         float percent = (System.currentTimeMillis() - animationStart) % animationDuration / (float)animationDuration;
         return frames[(int) (percent * frames.length)];
     }
 
+    /**
+     * Return the duration the animation
+     * @return the Animation duration
+     */
     public int getDuration() {
         return animationDuration;
     }

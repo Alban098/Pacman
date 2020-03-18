@@ -32,6 +32,10 @@ public class Loader {
 
     private static Loader instance;
 
+    /**
+     * Return an instance of the class
+     * @return an instance of the class
+     */
     public static Loader getInstance() {
         if (instance == null)
             instance = new Loader();
@@ -44,6 +48,10 @@ public class Loader {
         this.scoreFile = "scores.xml";
     }
 
+    /**
+     * Load the highscores from an XML File
+     * @return a sorted list of highscores
+     */
     public List<Score> loadHighscores() {
         List<Score> highscores = new ArrayList<>();
         try {
@@ -70,6 +78,10 @@ public class Loader {
         return highscores;
     }
 
+    /**
+     * save the highscores to an XML File
+     * @param highscores the list of highscores to be saved
+     */
     public void saveHighscore(List<Score> highscores) {
         try {
             Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -95,6 +107,10 @@ public class Loader {
         }
     }
 
+    /**
+     * Save the config to a XML File
+     * @param inputsMap the input map to be saved
+     */
     public void saveConfigs(Map<Input, KeyCode> inputsMap) {
         try {
             Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -120,6 +136,10 @@ public class Loader {
         }
     }
 
+    /**
+     * Load the inputs config from an XML File
+     * @return a map linking every Input to its corresponding Key
+     */
     public Map<Input, KeyCode> loadConfigs() {
         Map<Input, KeyCode> inputsMap = new HashMap<>();
         inputsMap.put(Input.UP_P1, KeyCode.UP);
@@ -184,6 +204,12 @@ public class Loader {
         return inputsMap;
     }
 
+    /**
+     * Populate a grid's movement map from an XML File
+     * Used by the game
+     * @param movementMap the movement map to be populated
+     * @param level the wanted level
+     */
     public void loadMap(Map<Point, StaticEntity> movementMap, int level) {
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -220,6 +246,13 @@ public class Loader {
         }
     }
 
+    /**
+     * Load a grid associated to a level from a file
+     * Used by the editor
+     * @param grid the grid element to be populated
+     * @param level the wanted level
+     * @return an int array representing the loaded grid's information {startLevel, endLevel, isDefault}
+     */
     public int[] loadMap(Grid grid, int level) {
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -268,6 +301,12 @@ public class Loader {
         return null;
     }
 
+    /**
+     * Construct a Grid's movement map from an XML Node
+     * @param movementMap the movement map to be populated
+     * @param xmlElement the XML Node representing the grid
+     * @throws Exception an Exception is thrown when the Node isn't normalized
+     */
     private void constructMap(Map<Point, StaticEntity> movementMap, Element xmlElement) throws Exception {
         movementMap.clear();
         int sizeY = Integer.parseInt(xmlElement.getAttribute("sizeY")) + 2;
@@ -352,6 +391,13 @@ public class Loader {
         }
     }
 
+    /**
+     * Save a grid to an XML Document and edit the document to keep a coherent file
+     * @param grid the grid to be saved
+     * @param startLevel the starting level index
+     * @param endLevel the ending level index
+     * @param isDefault is the grid the default one
+     */
     public void saveMap(Grid grid, int startLevel, int endLevel, boolean isDefault) {
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -374,14 +420,14 @@ public class Loader {
                 } if (startLevel > start && endLevel < end) { // new inside old
                     Element e2 = (Element) e.cloneNode(true);
                     e.setAttribute("end", String.valueOf(startLevel - 1));
-                    if (!hasBeenInserted) newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                    if (!hasBeenInserted) newMaps.appendChild(constructMapNode(xml, grid, startLevel, endLevel, isDefault));
                     e2.setAttribute("start", String.valueOf(endLevel + 1));
                     newMaps.appendChild(e2);
                     hasBeenInserted = true;
                     newMaps.appendChild(e);
                     continue;
                 } else if (startLevel >= start && endLevel < end) {
-                    if (!hasBeenInserted) newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                    if (!hasBeenInserted) newMaps.appendChild(constructMapNode(xml, grid, startLevel, endLevel, isDefault));
                     e.setAttribute("start", String.valueOf(endLevel + 1));
                     newMaps.appendChild(e);
                     hasBeenInserted = true;
@@ -389,20 +435,20 @@ public class Loader {
                     continue;
                 } else if (startLevel > start && endLevel <= end) {
                     e.setAttribute("end", String.valueOf(startLevel - 1));
-                    if (!hasBeenInserted) newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                    if (!hasBeenInserted) newMaps.appendChild(constructMapNode(xml, grid, startLevel, endLevel, isDefault));
                     hasBeenInserted = true;
                     newMaps.appendChild(e);
                     continue;
                 }
                 if (startLevel <= start && endLevel >= start) { // new overlap left
-                    if (!hasBeenInserted) newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                    if (!hasBeenInserted) newMaps.appendChild(constructMapNode(xml, grid, startLevel, endLevel, isDefault));
                     e.setAttribute("start", String.valueOf(endLevel + 1));
                     hasBeenInserted = true;
                     newMaps.appendChild(e);
                     continue;
                 }
                 if (startLevel <= end && endLevel >= end) {  // new overlap right
-                    if (!hasBeenInserted) newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                    if (!hasBeenInserted) newMaps.appendChild(constructMapNode(xml, grid, startLevel, endLevel, isDefault));
                     e.setAttribute("end", String.valueOf(startLevel - 1));
                     hasBeenInserted = true;
                     newMaps.appendChild(e);
@@ -411,7 +457,7 @@ public class Loader {
                 newMaps.appendChild(e);
             }
             if (!hasBeenInserted)
-                newMaps.appendChild(contructMapNode(xml, grid, startLevel, endLevel, isDefault));
+                newMaps.appendChild(constructMapNode(xml, grid, startLevel, endLevel, isDefault));
             xml.removeChild(maps);
             xml.appendChild(newMaps);
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -425,7 +471,16 @@ public class Loader {
         }
     }
 
-    private Node contructMapNode(Document document, Grid grid, int startLevel, int endLevel, boolean defaultMap) {
+    /**
+     * Create an XML Node from a grid
+     * @param document the XML document used to create the node
+     * @param grid the grid to be converted
+     * @param startLevel the starting level index
+     * @param endLevel the ending level index
+     * @param defaultMap is this grid the default one
+     * @return an XML Node representing the grid
+     */
+    private Node constructMapNode(Document document, Grid grid, int startLevel, int endLevel, boolean defaultMap) {
         Point size = grid.getDimension();
         String[] mapAsString = convertToStringArray(grid);
         Element mapNode = document.createElement("map");
@@ -444,6 +499,11 @@ public class Loader {
         return mapNode;
     }
 
+    /**
+     * Convert a Grid to an array of string
+     * @param grid the grid to be converted
+     * @return an array of String describing the grid
+     */
     private String[] convertToStringArray(Grid grid) {
         String[] mapAsString = new String[grid.getSizeY() - 2];
         for (int row = 2; row < grid.getSizeY(); row++) {

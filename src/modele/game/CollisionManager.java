@@ -4,8 +4,6 @@ import modele.game.entities.*;
 import modele.game.enums.GhostState;
 
 import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
 
 public class CollisionManager {
 
@@ -21,6 +19,12 @@ public class CollisionManager {
         totalGum = grid.getStaticEntityCount(StaticEntity.GUM);
     }
 
+    /**
+     * Check the grid for possible collision and compute their result
+     * check collisions between entities
+     * check collision between player and eatable entities
+     * update the score
+     */
     public void testCollision() {
         EntityPlayer player = game.getPlayer();
         Point pos = grid.getPosition(player);
@@ -73,7 +77,9 @@ public class CollisionManager {
         game.lastLevelScore = game.levelScore;
     }
 
-
+    /**
+     * Reset the number of Gum on the map to the correct value
+     */
     public void resetTotalGum() {
         totalGum = grid.getStaticEntityCount(StaticEntity.GUM);
     }

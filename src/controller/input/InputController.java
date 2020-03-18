@@ -34,14 +34,30 @@ public class InputController {
         this.audioController = audioController;
     }
 
+    /**
+     * Get the key associated to an Input
+     * @param input the input to get
+     * @return the KeyCode mapped to the Input
+     */
     public KeyCode getKey(Input input) {
         return inputsMap.get(input);
     }
 
+    /**
+     * Set the pair of Input -> Key
+     * @param input the input to be mapped
+     * @param keyCode the key associated with the input
+     */
     private void setKey(Input input, KeyCode keyCode) {
         inputsMap.put(input, keyCode);
     }
 
+    /**
+     * Handle Key and Mouse input and update the game
+     * @param kEvent the KeyEvent fired by the frame
+     * @param mEvent the MouseEvent fired by the frame
+     * @param viewController the ViewController associated to the frame
+     */
     public void handleInput(KeyEvent kEvent, MouseEvent mEvent, ViewController viewController) {
         Game game = Game.getInstance();
         switch (game.getGameState()) {
@@ -208,6 +224,10 @@ public class InputController {
         }
     }
 
+    /**
+     * Set whether or not the Editor Windows is launched
+     * @param editorLaunched is the editor windows launched
+     */
     public synchronized void setEditorLaunched(boolean editorLaunched) {
         this.editorLaunched = editorLaunched;
     }

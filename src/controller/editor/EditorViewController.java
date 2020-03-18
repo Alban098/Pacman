@@ -60,7 +60,7 @@ public class EditorViewController extends Application implements Observer {
         StackPane root = new StackPane();
         root.getChildren().add(bp);
         Scene scene = new Scene(root);
-        primaryStage.setTitle("Map Editor 1.0");
+        primaryStage.setTitle("Map Editor 2.0");
         primaryStage.setOnCloseRequest(we -> {
             editor.requestClose();
             Game.getInstance().runLater(() -> Game.getInstance().setGameState(GameState.MENU_SCREEN));
@@ -107,10 +107,17 @@ public class EditorViewController extends Application implements Observer {
         drawBackground();
     }
 
+    /**
+     * Set the Input Controller
+     * @param inputController the new Input Controller
+     */
     public synchronized void setInputController(InputController inputController) {
         this.inputController = inputController;
     }
 
+    /**
+     * Load all the sprites and images in memory
+     */
     private void loadSprites() {
         backgroundTileMap.put(StaticEntity.EMPTY, new Image("resources/sprites/map/empty.png"));
         backgroundTileMap.put(StaticEntity.GUM, new Image("resources/sprites/map/gum.png"));
@@ -140,6 +147,9 @@ public class EditorViewController extends Application implements Observer {
         wallTileMap.put((byte) (MASK_WALL_LEFT | MASK_WALL_UP | MASK_WALL_RIGHT | MASK_WALL_DOWN), new Image("resources/sprites/map/wall_all.png"));
     }
 
+    /**
+     * Resize the background canvas and draw the difference from the last frame
+     */
     private void drawPartialBackground() {
         Editor editor = Editor.getInstance();
         background.setWidth(16 * editor.getSizeX());
@@ -172,6 +182,9 @@ public class EditorViewController extends Application implements Observer {
         }
     }
 
+    /**
+     * Resize and draw the background canvas
+     */
     private void drawBackground() {
         Editor editor = Editor.getInstance();
         background.setWidth(16*editor.getSizeX());
@@ -203,6 +216,11 @@ public class EditorViewController extends Application implements Observer {
         }
     }
 
+    /**
+     * Compute the binary mask of a specific tile
+     * @param pos the pos to test
+     * @return a binary mask representing the wall connections
+     */
     private byte getWallMask(Point pos) {
         Editor editor = Editor.getInstance();
         byte mask = 0b0000;

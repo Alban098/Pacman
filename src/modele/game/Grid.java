@@ -8,7 +8,7 @@ import modele.game.enums.GhostName;
 import modele.game.enums.GhostState;
 import modele.game.enums.Movement;
 import modele.game.entities.StaticEntity;
-import modele.game.logic.*;
+import modele.game.entities.logic.*;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -41,6 +41,10 @@ public class Grid {
         init(1);
     }
 
+    /**
+     * Load the appropriated map and initialize the relevant variables and entities
+     * @param level the level to load
+     */
     private void init(int level) {
         Loader.getInstance().loadMap(movementMap, level);
         for (Point p : movementMap.keySet()) {
@@ -73,11 +77,17 @@ public class Grid {
         getDimension();
     }
 
-
+    /**
+     * Restart the game at a certain level
+     * @param level the level to start
+     */
     public synchronized void restart(int level) {
         init(level);
     }
 
+    /**
+     * Start every MoveableEntity
+     */
     public synchronized void startEntities() {
         for (MoveableEntity e : entities.keySet()) {
             threads.put(e, new Thread(e));
@@ -85,18 +95,30 @@ public class Grid {
         }
     }
 
+    /**
+     * Stop the game by killing every MoveableEntity
+     */
     public synchronized void stopGame() {
         for (MoveableEntity e : entities.keySet()) {
             e.kill();
         }
     }
 
+    /**
+     * Reset an entity and put it to his Spawn Point
+     * @param entity the entity to reset
+     */
     public synchronized void resetEntity(MoveableEntity entity) {
         entities.replace(entity, entity.getSpawnPoint());
         entity.reset();
     }
 
-
+    /**
+     * Return whether or not the movement of MoveableEntity in a certain direction is possible
+     * @param dir the direction to apply
+     * @param entity the entity to move
+     * @return can the entity move to dir
+     */
     public synchronized boolean canMove(Movement dir, MoveableEntity entity) {
         if (entity instanceof EntityPlayer)
             if (((EntityPlayer)entity).isDead())
@@ -111,6 +133,11 @@ public class Grid {
         return nextPos != StaticEntity.WALL && nextPos != StaticEntity.GATE;
     }
 
+    /**
+     * Move a MoveableEntity in a certain direction if possible
+     * @param dir the direction to apply
+     * @param entity the entity to move
+     */
     public synchronized void move(Movement dir, MoveableEntity entity) {
         Point dimension = getDimension();
         Point pos = entities.get(entity);
@@ -138,7 +165,10 @@ public class Grid {
         }
     }
 
-
+    /**
+     * Compute the dimension of the grid and update it
+     * @return a Point containing the size of the map along x and y-axis
+     */
     public Point getDimension() {
         Point size = new Point(0, 0);
         for (Point p : movementMap.keySet()) {
@@ -154,27 +184,54 @@ public class Grid {
         return size;
     }
 
+    /**
+     * Get the size of the grid along the y-axis
+     * @return the size of the grid along the y-axis
+     */
     public int getSizeY() {
         return sizeY;
     }
 
+    /**
+     * Get the size of the grid along the x-axis
+     * @return the size of the grid along the x-axis
+     */
     public int getSizeX() {
         return sizeX;
     }
 
+    /**
+     * Return a set of all MoveableEntity in the grid
+     * @return a set of all MoveableEntity
+     */
     public synchronized Set<MoveableEntity> getEntities() {
         return entities.keySet();
     }
 
-
+    /**
+     * Get the position of a MoveableEntity
+     * @param entity the entity to check
+     * @return the entity's position
+     */
     public synchronized Point getPosition(MoveableEntity entity) {
         return entities.get(entity);
     }
 
+    /**
+     * Get the StaticEntity at a position
+     * @param pos the Point to check
+     * @return the StaticEntity at pos
+     */
     public synchronized StaticEntity getStaticEntity(Point pos) {
         return movementMap.get(pos);
     }
 
+    /**
+     * Get the StaticEntity at a position + one move
+     * @param dir the direction to go
+     * @param pos the Point to check
+     * @return the StaticEntity at pos + dir
+     */
     public synchronized StaticEntity getStaticEntity(Movement dir, Point pos) {
         Point dimension = getDimension();
         switch (dir) {
@@ -192,6 +249,11 @@ public class Grid {
         return null;
     }
 
+    /**
+     * Set the StaticEntity at a certain Point
+     * @param pos the Point to be edited
+     * @param type the new StaticEntity
+     */
     public synchronized void setStaticEntity(Point pos, StaticEntity type) {
         switch (type) {
             case PLAYER_SPAWN:
@@ -211,15 +273,32 @@ public class Grid {
         }
     }
 
+    /**
+     * Return whether or not the StaticEntity at a point is of a certain type
+     * @param pos the Point to be checked
+     * @param type the StaticEntity to compare to
+     * @return is the StaticEntity at pos a "type"
+     */
     public synchronized boolean isType(Point pos, StaticEntity type) {
         StaticEntity e = movementMap.get(pos);
         return e == type;
     }
 
+    /**
+     * Return the count of a specific StaticEntity
+     * @param type the desired StaticEntity
+     * @return the count of the desired StaticEntity
+     */
     public int getStaticEntityCount(StaticEntity type) {
         return type.getCount();
     }
 
+    /**
+     * Resize the grid to a desired size
+     * Add EMPTY tiles when grown
+     * @param x the desired size along the x-axis
+     * @param y the desired size along the y-axis
+     */
     public synchronized void resize(int x, int y) {
         if (x <= 0 || y <= 0)
             return;
@@ -248,10 +327,19 @@ public class Grid {
         getDimension();
     }
 
+    /**
+     * Return the movement map of the grid
+     * @return the current movement map
+     */
     public synchronized Map<Point, StaticEntity> getMovementMap() {
         return movementMap;
     }
 
+    /**
+     * Generate a coherent random map
+     * @param x the size of the grid along the x-axis
+     * @param y the size of the grid along the y-axis
+     */
     public synchronized void random(int x, int y) {
         MapGenerator generator = new MapGenerator();
         generator.generateMap(x, y, movementMap);

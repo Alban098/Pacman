@@ -13,14 +13,20 @@ public class FruitSpawner extends MoveableEntity {
         super(grid);
     }
 
+    /**
+     * Update the entity and spawn a fruit if necessary
+     */
     @Override
     protected void update() {
         if (needToSpawnFruit) {
-            spawnFruit(Game.getInstance().getLevel());
+            spawnFruit();
             needToSpawnFruit = false;
         }
     }
 
+    /**
+     * Manage the entity's behavior
+     */
     @Override
     public void run() {
         while (running) {
@@ -34,7 +40,11 @@ public class FruitSpawner extends MoveableEntity {
         running = true;
     }
 
-    private void spawnFruit(int level) {
+    /**
+     * Spawn a fruit depending on the current level
+     */
+    private void spawnFruit() {
+        int level = Game.getInstance().getLevel();
         Point pos = grid.getPosition(this);
         if (level <= 2)
             grid.setStaticEntity(pos, StaticEntity.CHERRY);
@@ -54,6 +64,9 @@ public class FruitSpawner extends MoveableEntity {
             grid.setStaticEntity(pos, StaticEntity.KEY);
     }
 
+    /**
+     * Notify the Spawner that it need to spawn a fruit at it's next update
+     */
     public synchronized void dispatchSpawnEvent() {
         needToSpawnFruit = true;
     }

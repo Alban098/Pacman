@@ -144,6 +144,9 @@ public class ViewController extends Application implements Observer {
         root.requestFocus();
     }
 
+    /**
+     * Load all the sprites and images in memory
+     */
     private void loadSprites() {
         Game game = Game.getInstance();
         Sprite pacmanSprite = new Sprite();
@@ -268,12 +271,18 @@ public class ViewController extends Application implements Observer {
         wallTileMap.put((byte) (MASK_WALL_LEFT | MASK_WALL_UP | MASK_WALL_RIGHT | MASK_WALL_DOWN), new Image("resources/sprites/map/wall_all.png"));
     }
 
+    /**
+     * Reset every entity's Sprite to its UP Animation
+     */
     public void resetSprites() {
         for (MoveableEntity e : Game.getInstance().getEntities())
             if (e instanceof EntityGhost || e instanceof EntityPlayer)
                 foregroundSpriteMap.get(e).getFrame(SpriteID.UP);
     }
 
+    /**
+     * Draw the Background canvas
+     */
     private void drawBackground() {
         Game game = Game.getInstance();
         background.setWidth(16*game.getSizeX());
@@ -310,6 +319,9 @@ public class ViewController extends Application implements Observer {
         }
     }
 
+    /**
+     * Draw the Foreground canvas
+     */
     private void drawForeground() {
         Game game = Game.getInstance();
         EntityPlayer player = game.getPlayer();
@@ -367,6 +379,9 @@ public class ViewController extends Application implements Observer {
         }
     }
 
+    /**
+     * Draw the GUI canvas
+     */
     private void drawGUI() {
         Game game = Game.getInstance();
         Menu menu = Menu.getInstance();
@@ -540,6 +555,11 @@ public class ViewController extends Application implements Observer {
         }
     }
 
+    /**
+     * Draw a button on a canvas
+     * @param gc the GraphicsContext to draw to
+     * @param button the button to draw
+     */
     private void drawButton(GraphicsContext gc, Button button) {
         gc.setFont(javafx.scene.text.Font.font("Verdana", FontWeight.BOLD,  button.getFontSize()));
         if (Utils.isInside(mouseCoords, button.getHitbox())) gc.setStroke(Color.RED);
@@ -551,6 +571,12 @@ public class ViewController extends Application implements Observer {
             gc.fillText(button.getText(), button.getHitbox().x + button.getHitbox().width / 2f, button.getHitbox().y + button.getFontSize() * 4/3f);
     }
 
+    /**
+     * Draw a digit on a canvas
+     * @param digit the digit to draw
+     * @param pos where to draw the digit
+     * @param gc the GraphicsContext to draw to
+     */
     private void drawDigit(int digit, Point pos, GraphicsContext gc) {
         switch (digit) {
             case 0:
@@ -586,6 +612,11 @@ public class ViewController extends Application implements Observer {
         }
     }
 
+    /**
+     * Draw a sprite on a canvas
+     * @param entity the Entity to draw
+     * @param gc the GraphicsContext to draw to
+     */
     private void drawSprite(MoveableEntity entity, GraphicsContext gc) {
         Game game = Game.getInstance();
         if (entity == null)
@@ -667,6 +698,11 @@ public class ViewController extends Application implements Observer {
         }
     }
 
+    /**
+     * Compute the binary mask of a specific tile
+     * @param pos the pos to test
+     * @return a binary mask representing the wall connections
+     */
     private byte getWallMask(Point pos) {
         Game game = Game.getInstance();
         byte mask = 0b0000;
@@ -677,6 +713,9 @@ public class ViewController extends Application implements Observer {
         return mask;
     }
 
+    /**
+     * Create and initialize every button of the menu
+     */
     public void initButtons() {
         MenuTab.CONTROLS.addButton("back", new Button("⮈", new Rectangle((int)(gui.getWidth() * 1/15), (int)(gui.getWidth() * 1/15), 50, 34), 18));
         MenuTab.CONTROLS.addButton(Input.UP_P1.toString(), new Button(inputController.getKey(Input.UP_P1).getName(), new Rectangle((int)(gui.getWidth() / 2 - 37), (int)(gui.getHeight() / 3 - 15 - 40), 74, 30), 15));
@@ -702,7 +741,9 @@ public class ViewController extends Application implements Observer {
 
     }
 
-
+    /**
+     * Update the controller and play draw the canvas
+     */
     @Override
     public void update(Observable o, Object arg) {
         Platform.runLater(renderer);
