@@ -1,7 +1,8 @@
 # Projet Pacman
 
 The goal of the project was to recreate a working game of Pacman using the Observer Design Pattern and a Multithreaded architecture
-The features are
+
+The project features : 
 * The base Game fully animated with original Ghosts AI
 * A working Sound Engine
 * Fully customizable Controls
