@@ -1,28 +1,87 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <maps>
-    <map end="100" sizeX="25" sizeY="23" start="1">
-        <row id="0">WWWWWWWWWWWW0WWWWWWWWWWWW</row>
-        <row id="1">W1111111111W0W1111111111W</row>
-        <row id="2">W1WWW1WWWW1W0W1WWWW1WWW1W</row>
-        <row id="3">W111W111111W0W111111W111W</row>
-        <row id="4">W1W111WW1WWW0WWW1WW111W1W</row>
-        <row id="5">W2WWW1W11111111111W1WWW2W</row>
-        <row id="6">W1W111W1WWWWWWWWW1W111W1W</row>
-        <row id="7">W111W111111111111111W111W</row>
-        <row id="8">W1W1W1WWWW0WWW0WWWW1W1W1W</row>
-        <row id="9">W2W1W1W10000G00001W1W1W2W</row>
-        <row id="10">WWW1W111W0WWAWW0W111W1WWW</row>
-        <row id="11">0001W1WWW0W0S0W0WWW1W1000</row>
-        <row id="12">WWW1W111W0WWWWW0W111W1WWW</row>
-        <row id="13">W2W1W1W1000IWI0001W1W1W2W</row>
-        <row id="14">W1W1W1WWWW0WWW0WWWW1W1W1W</row>
-        <row id="15">W111W1111111P1111111W111W</row>
-        <row id="16">W1W111W1WWWWWWWWW1W111W1W</row>
-        <row id="17">W2WWW1W11111111111W1WWW2W</row>
-        <row id="18">W1W111WW1WWW0WWW1WW111W1W</row>
-        <row id="19">W111W111111W0W111111W111W</row>
-        <row id="20">W1WWW1WWWW1W0W1WWWW1WWW1W</row>
-        <row id="21">W1111111111W0W1111111111W</row>
-        <row id="22">WWWWWWWWWWWW0WWWWWWWWWWWW</row>
+    <map end="2" sizeX="27" sizeY="23" start="1">
+                
+        <row id="0">000000000000000000000000000</row>
+                
+        <row id="1">0WWWWWWWWWWWWWWWWWWWWWWWWW0</row>
+                
+        <row id="2">0W11111111111111111111111W0</row>
+                
+        <row id="3">0W1W1WWW1WWWWWWWWW1WWW1W1W0</row>
+                
+        <row id="4">0W2W1111111111111111111W2W0</row>
+                
+        <row id="5">0W1W1WWWWW1WWWWW1WWWWW1W1W0</row>
+                
+        <row id="6">0W1W111111111W111111111W1W0</row>
+                
+        <row id="7">0W1W1WWW1WWW1W1WWW1WWW1W1W0</row>
+                
+        <row id="8">0W111W111W111G111W111W111W0</row>
+                
+        <row id="9">0WWW1W1WWW1WWAWW1WWW1W1WWW0</row>
+                
+        <row id="10">0W111111111W0S0W111111111W0</row>
+                
+        <row id="11">0W1WWW1WWW1WWWWW1WWW1WWW1W0</row>
+                
+        <row id="12">WW11111W11111P11111W11111WW</row>
+                
+        <row id="13">001WWW1W1WWWWWWWWW1W1WWW100</row>
+                
+        <row id="14">WW11111111111I11111111111WW</row>
+                
+        <row id="15">0WWW1WWW1W1WWWWW1W1WWW1WWW0</row>
+                
+        <row id="16">0W1111111W1W111W1W1111111W0</row>
+                
+        <row id="17">0W1W1WWW1W1W1W1W1W1WWW1W1W0</row>
+                
+        <row id="18">0W2W1W1111111W1111111W1W2W0</row>
+                
+        <row id="19">0W1W1W1WWW1WWWWW1WWW1W1W1W0</row>
+                
+        <row id="20">0W111W11111WWWWW11111W111W0</row>
+                
+        <row id="21">0WWWWWWWWWWWWWWWWWWWWWWWWW0</row>
+                
+        <row id="22">000000000000000000000000000</row>
+            
+    </map>
+    <map default="1" end="5" sizeX="35" sizeY="33" start="3">
+        <row id="0">0000000000000W0W0000000000000000000</row>
+        <row id="1">0WWWWWWWWWWWWW0WWWWWWWWWWWWWWWWWWW0</row>
+        <row id="2">0W1111111W111111111111111W1111111W0</row>
+        <row id="3">0W2WWWWW1W1WWWWW1W1WWWWW1W1WWWWW2W0</row>
+        <row id="4">0W111111111111111W111111111111111W0</row>
+        <row id="5">0WWWWW1WWW1W1WWW1W1WWW1W1WWW1WWWWW0</row>
+        <row id="6">0W1111111W1W11111111111W1W1111111W0</row>
+        <row id="7">0W1WWW1W1W1WWW1W1W1W1WWW1W1W1WWW1W0</row>
+        <row id="8">0W1111111I11111W1W1W11111I1111111W0</row>
+        <row id="9">0W1W1WWWWW1WWW1W1W1W1WWW1WWWWW1W1W0</row>
+        <row id="10">0W1W111111111111111111111111111W1W0</row>
+        <row id="11">0W1W1WWW1WWW1WWW1W1WWW1WWW1WWW1W1W0</row>
+        <row id="12">0W1W111W111111111W111111111W111W1W0</row>
+        <row id="13">0W1W1W1W1WWW1W1WWWWW1W1WWW1W1W1W1W0</row>
+        <row id="14">0W1111111W111W111G111W111W1111111W0</row>
+        <row id="15">0WWW1WWW1W1W1W1WWAWW1W1W1W1WWW1WWW0</row>
+        <row id="16">0W211111111W111W0S0W111W111111112W0</row>
+        <row id="17">0W1WWW1W1WWW1W1WWWWW1W1WWW1W1WWW1W0</row>
+        <row id="18">0W11111W111111111P111111111W11111W0</row>
+        <row id="19">0WWW1W1WWW1W1WWWWWWWWW1W1WWW1W1WWW0</row>
+        <row id="20">WW111W11111W11111111111W11111W111WW</row>
+        <row id="21">001WWW1WWW1WWW1WWWWW1WWW1WWW1WWW100</row>
+        <row id="22">WW1111111W111111111111111W1111111WW</row>
+        <row id="23">0W1WWW1W1W1W1WWW1W1WWW1W1W1W1WWW1W0</row>
+        <row id="24">0W1W111111I11W111W111W11I111111W1W0</row>
+        <row id="25">0W1W1WWW1WWW1W1W1W1W1W1WWW1WWW1W1W0</row>
+        <row id="26">0W111W11111W111W111W111W11111W111W0</row>
+        <row id="27">0W1W1W1WWW1W1W1W1W1W1W1W1WWW1W1W1W0</row>
+        <row id="28">0W1W111111111W111W111W111111111W1W0</row>
+        <row id="29">0W2WWW1W1WWW1WWW1W1WWW1WWW1W1WWW2W0</row>
+        <row id="30">0W11111W1111111111111111111W11111W0</row>
+        <row id="31">0WWWWWWWWWWWWW0WWWWWWWWWWWWWWWWWWW0</row>
+        <row id="32">0000000000000W0W0000000000000000000</row>
     </map>
 </maps>

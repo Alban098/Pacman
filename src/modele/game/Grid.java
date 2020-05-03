@@ -303,7 +303,6 @@ public class Grid {
         if (x <= 0 || y <= 0)
             return;
         Point dimension = getDimension();
-        System.out.println(dimension + " / " + x + " " + y);
         Map<Point, StaticEntity> newMap = new HashMap<>();
         for (int i = 0; i < Math.min(x, dimension.x); i++) {
             for (int j = 0; j < Math.min(y, dimension.y); j++) {

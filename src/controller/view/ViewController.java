@@ -73,7 +73,7 @@ public class ViewController extends Application implements Observer {
     private Point mouseCoords = new Point(0, 0);
 
     @Override
-    public void start(Stage primaryStage) throws IOException {
+    public void start(Stage primaryStage) {
 
         Game game = Game.getInstance();
         Menu menu = Menu.getInstance();
@@ -115,7 +115,7 @@ public class ViewController extends Application implements Observer {
 
         Scene scene = new Scene(root, 16 * game.getSizeX() * SCALE, 16 * game.getSizeY() * SCALE);
 
-        primaryStage.setTitle("Beta 1.6");
+        primaryStage.setTitle("Pacman v1.0");
         primaryStage.setOnCloseRequest(we -> {
             game.requestClose();
             menu.requestClose();
@@ -418,6 +418,7 @@ public class ViewController extends Application implements Observer {
                 }
 
                 if (!game.isGameStarted() && isDeathAnimFinished && game.getLives() >= 0) {
+                    backgroundHasBeenDrawn = false;
                     gc.drawImage(GUITileMap.get(GUIElement.READY), 16*(game.getSizeX()/2 - 2), 16*(game.getSizeY()/2 + 2), 5*16, 16);
                 }
 
@@ -479,7 +480,11 @@ public class ViewController extends Application implements Observer {
                 }
                 break;
             case LEVEL_EDITOR:
+                gc.setFill(Color.BLACK);
+                gc.fillRect(0, 0, gui.getWidth(), gui.getHeight());
             case MENU_SCREEN:
+                gc.setFill(Color.BLACK);
+                gc.fillRect(0, 0, gui.getWidth(), gui.getHeight());
                 switch (menu.getTab()) {
                     case MAIN:
                         Image logo = GUITileMap.get(GUIElement.LOGO);
@@ -493,6 +498,7 @@ public class ViewController extends Application implements Observer {
                             drawButton(gc, MenuTab.MAIN.getButton(buttonId));
                         break;
                     case CONTROLS:
+                        gc.setFill(Color.YELLOW);
                         gc.setTextAlign(TextAlignment.CENTER);
                         gc.setImageSmoothing(false);
                         Sprite pacman = foregroundSpriteMap.get(game.getPlayer());

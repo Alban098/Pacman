@@ -1,5 +1,6 @@
 package modele.game;
 
+import controller.view.ViewController;
 import modele.Loader;
 import modele.Utils;
 import modele.game.entities.EntityGhost;

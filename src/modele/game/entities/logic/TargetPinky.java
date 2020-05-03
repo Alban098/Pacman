@@ -20,23 +20,23 @@ import java.awt.*;
  * DOWN =  0x[00 01] -> {0, 1}
  * LEFT =  0x[01 00] -> {1, 0}
  * RIGHT = 0x[FF 00] -> {-1, 0}
- * The direction are flipped compared to out implementation because {0, 0} is at the top right on the original game
+ * The direction are flipped compared to our implementation because {0, 0} is at the top right on the original game
  *
  * When the original game calculate the target position
  * it will multiply the direction by 2 and add it to the player's position
  * but the position is treated as one 16Bits values rather than 2 8Bits one the resulting value are :
- * UP =    0x[01 FC] -> {1, -2}
+ * UP =    0x[01 FE] -> {1, -2}
  * DOWN =  0x[00 02] -> {0, 2}
- * LEFT =  0x[01 00] -> {2, 0}
- * RIGHT = 0x[FC 00] -> {-2, 0} (The 1FC is truncated to FC due to 16Bits overflow)
+ * LEFT =  0x[02 00] -> {2, 0}
+ * RIGHT = 0x[FE 00] -> {-2, 0} (The 1FC is truncated to FC due to 16Bits overflow)
  *
  * When the game add that to the player's position it will result in the position 2 tile in front of the player expect for the UP direction :
  * Let's take a random position : {10, 10};
  *          1 1
  *      0x[0A 0A] -> {10, 10}
- *   +  0x[01 FC] -> {1, -2}
+ *   +  0x[01 FE] -> {1, -2}
  *   ------------
- *   =  Ox[0C 06] -> {12, 6}
+ *   =  Ox[0C 08] -> {12, 8}
  *
  *   this effectively represent 2 tiles up and 2 tiles left
  */

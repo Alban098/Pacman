@@ -10,17 +10,24 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import controller.input.Input;
 
+import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
-import java.io.File;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
+import java.security.spec.KeySpec;
 import java.util.*;
 import java.util.List;
 
@@ -45,7 +52,7 @@ public class Loader {
     private Loader() {
         this.mapFile = "map.xml";
         this.controlsFile = "controls.xml";
-        this.scoreFile = "scores.xml";
+        this.scoreFile = "scores.bin";
     }
 
     /**
@@ -55,11 +62,13 @@ public class Loader {
     public List<Score> loadHighscores() {
         List<Score> highscores = new ArrayList<>();
         try {
+            decryptFile(scoreFile, "tmp");
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            File fileXML = new File(scoreFile);
+            File fileXML = new File("tmp");
             Document xml;
-
             xml = builder.parse(fileXML);
+            Files.delete(Paths.get("tmp"));
+
             Element highscoreList = (Element)xml.getElementsByTagName("highscores").item(0);
             if (highscoreList == null)
                 throw new Exception(scoreFile + " file corrupted (highscore node not found)");
@@ -70,8 +79,7 @@ public class Loader {
                 highscores.add(new Score(Integer.parseInt(e.getTextContent()), e.getAttribute("name")));
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(-1);
+            System.out.println("Unable to load scores");
         }
         Collections.sort(highscores);
         Collections.reverse(highscores);
@@ -99,11 +107,16 @@ public class Loader {
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             DOMSource domSource = new DOMSource(document);
-            StreamResult streamResult = new StreamResult(new File(scoreFile));
+
+            File plainFile = new File("tmp");
+
+            StreamResult streamResult = new StreamResult(plainFile);
             transformer.transform(domSource, streamResult);
 
-        } catch (TransformerException | ParserConfigurationException pce) {
-            pce.printStackTrace();
+            fileEncrypt("tmp", scoreFile);
+            Files.delete(Paths.get("tmp"));
+        } catch (Exception e) {
+            System.out.println("Unable to save scores");
         }
     }
 
@@ -543,5 +556,105 @@ public class Loader {
         return mapAsString;
     }
 
+    /**
+     * Decrypt the input File and save it to the output File
+     * @param in inputFile path
+     * @param out outputFile path
+     */
+    private static void fileEncrypt(String in, String out) throws Exception {
+        FileInputStream inFile = new FileInputStream(in);
 
+        FileOutputStream outFile = new FileOutputStream(out);
+
+        String password = "Yh56_Hgf'66778_('!00tTg4--76";
+
+        byte[] salt = new byte[8];
+        SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(salt);
+        FileOutputStream saltOutFile = new FileOutputStream("s.bin");
+        saltOutFile.write(salt);
+        saltOutFile.close();
+
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
+        SecretKey secretKey = factory.generateSecret(keySpec);
+        SecretKey secret = new SecretKeySpec(secretKey.getEncoded(), "AES");
+
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, secret);
+        AlgorithmParameters params = cipher.getParameters();
+
+        FileOutputStream ivOutFile = new FileOutputStream("i.bin");
+        byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+        ivOutFile.write(iv);
+        ivOutFile.close();
+
+        byte[] input = new byte[64];
+        int bytesRead;
+
+        while ((bytesRead = inFile.read(input)) != -1) {
+            byte[] output = cipher.update(input, 0, bytesRead);
+            if (output != null)
+                outFile.write(output);
+        }
+
+        byte[] output = cipher.doFinal();
+        if (output != null)
+            outFile.write(output);
+
+        inFile.close();
+        outFile.flush();
+        outFile.close();
+    }
+
+    /**
+     * Encrypt the input File and save it to the output File
+     * @param inFile inputFile path
+     * @param outFile outputFile path
+     */
+    private void decryptFile(String inFile, String outFile) throws Exception {
+        String password = "Yh56_Hgf'66778_('!00tTg4--76";
+
+        // reading the salt
+        // user should have secure mechanism to transfer the
+        // salt, iv and password to the recipient
+        FileInputStream saltFis = new FileInputStream("s.bin");
+        byte[] salt = new byte[8];
+        saltFis.read(salt);
+        saltFis.close();
+
+        // reading the iv
+        FileInputStream ivFis = new FileInputStream("i.bin");
+        byte[] iv = new byte[16];
+        ivFis.read(iv);
+        ivFis.close();
+
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
+        SecretKey tmp = factory.generateSecret(keySpec);
+        SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+        // file decryption
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.DECRYPT_MODE, secret, new IvParameterSpec(iv));
+
+        FileInputStream fis = new FileInputStream(inFile);
+        FileOutputStream fos = new FileOutputStream(outFile);
+        byte[] in = new byte[64];
+        int read;
+        while ((read = fis.read(in)) != -1) {
+            byte[] output = cipher.update(in, 0, read);
+            if (output != null)
+                fos.write(output);
+        }
+
+        byte[] output = cipher.doFinal();
+        if (output != null)
+            fos.write(output);
+        fis.close();
+        fos.flush();
+        fos.close();
+        Files.delete(Paths.get("s.bin"));
+        Files.delete(Paths.get("i.bin"));
+    }
 }

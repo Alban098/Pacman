@@ -11,8 +11,8 @@ import modele.game.enums.Movement;
 import java.awt.*;
 
 /**
- * Inky's target point is the symmetric of Blinky's position relative to the point 2 tile in front of the player (Pivot point)
- * except when facing up, the Pivot point became 2 tiles up and left
+ * Inky's target point is the symmetric of Blinky's position relative to the point 1 tile in front of the player (Pivot point)
+ * except when facing up, the Pivot point became 1 tiles up and left
  *
  * this is due to an overflow of the position vector in the original game
  *
@@ -25,23 +25,15 @@ import java.awt.*;
  * RIGHT = 0x[FF 00] -> {-1, 0}
  * The direction are flipped compared to out implementation because {0, 0} is at the top right on the original game
  *
- * When the original game calculate the target position
- * it will multiply the direction by 2 and add it to the player's position
- * but the position is treated as one 16Bits values rather than 2 8Bits one the resulting value are :
- * UP =    0x[01 FC] -> {1, -2}
- * DOWN =  0x[00 02] -> {0, 2}
- * LEFT =  0x[01 00] -> {2, 0}
- * RIGHT = 0x[FC 00] -> {-2, 0} (The 1FC is truncated to FC due to 16Bits overflow)
- *
- * When the game add that to the player's position it will result in the position 2 tile in front of the player expect for the UP direction :
+ * When the game add that to the player's position it will result in the position 1 tile in front of the player expect for the UP direction :
  * Let's take a random position : {10, 10};
  *          1 1
  *      0x[0A 0A] -> {10, 10}
- *   +  0x[01 FC] -> {1, -2}
+ *   +  0x[00 FF] -> {0, -1}
  *   ------------
- *   =  Ox[0C 06] -> {12, 6}
+ *   =  Ox[0B 09] -> {11, 9}
  *
- *   this effectively represent 2 tiles up and 2 tiles left
+ *   this effectively represent 1 tiles up and 1 tiles left
  */
 public class TargetInky extends TargetTileFinder {
 
