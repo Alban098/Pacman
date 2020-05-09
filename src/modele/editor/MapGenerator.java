@@ -21,6 +21,7 @@ public class MapGenerator {
     }
 
     /**
+     * <pre>
      * Generate a Map usable by the Game of size (x, y)
      * It will first generate the left side of a Tetris like grid with a fixed tile representing the Ghost's starting position
      * __________________
@@ -35,7 +36,7 @@ public class MapGenerator {
      * The grid is mirrored to generate a symmetric map and the shapes are scaled by 2 to avoid 0 thickness Paths and Walls
      * The edges are then converted to Paths and the inside of the Shapes to Walls
      * This generate a set of path with no dead ends
-     *
+     * </pre>
      * @param x width of the map
      * @param y height of the map
      * @param movementMap Map to populate

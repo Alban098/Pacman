@@ -25,8 +25,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.KeySpec;
 import java.util.*;
 import java.util.List;
@@ -560,10 +558,10 @@ public class Loader {
      * Decrypt the input File and save it to the output File
      * @param in inputFile path
      * @param out outputFile path
+     * @throws Exception when one of the file couldn't be saved or an error occur during encryption
      */
     private static void fileEncrypt(String in, String out) throws Exception {
         FileInputStream inFile = new FileInputStream(in);
-
         FileOutputStream outFile = new FileOutputStream(out);
 
         String password = "Yh56_Hgf'66778_('!00tTg4--76";
@@ -611,19 +609,16 @@ public class Loader {
      * Encrypt the input File and save it to the output File
      * @param inFile inputFile path
      * @param outFile outputFile path
+     * @throws Exception when one of the file is invalid or an error occur during decryption
      */
     private void decryptFile(String inFile, String outFile) throws Exception {
         String password = "Yh56_Hgf'66778_('!00tTg4--76";
 
-        // reading the salt
-        // user should have secure mechanism to transfer the
-        // salt, iv and password to the recipient
         FileInputStream saltFis = new FileInputStream("s.bin");
         byte[] salt = new byte[8];
         saltFis.read(salt);
         saltFis.close();
 
-        // reading the iv
         FileInputStream ivFis = new FileInputStream("i.bin");
         byte[] iv = new byte[16];
         ivFis.read(iv);
@@ -634,7 +629,6 @@ public class Loader {
         SecretKey tmp = factory.generateSecret(keySpec);
         SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
 
-        // file decryption
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, secret, new IvParameterSpec(iv));
 
@@ -654,7 +648,5 @@ public class Loader {
         fis.close();
         fos.flush();
         fos.close();
-        Files.delete(Paths.get("s.bin"));
-        Files.delete(Paths.get("i.bin"));
     }
 }

@@ -44,7 +44,7 @@ public class InputController {
     }
 
     /**
-     * Set the pair of Input -> Key
+     * Set the pair of Input - Key
      * @param input the input to be mapped
      * @param keyCode the key associated with the input
      */

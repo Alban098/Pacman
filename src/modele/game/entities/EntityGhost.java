@@ -10,6 +10,7 @@ import modele.game.entities.logic.TargetTileFinder;
 import java.awt.*;
 
 /**
+ * <pre>
  * A Ghost work using GhostStates that will dictate the way we compute his movement
  * if a Ghost hasn't started yet he is in STILL Mode
  * When he start, he will switch to STARTING Mode and seek his Starting Point
@@ -25,6 +26,7 @@ import java.awt.*;
  *  STILL -> STARTING -> SCATTER -> CHASE -> FRIGHTENED -> EATEN -> STARTING
  *                    -> CHASE -> SCATTER ->            -> CHASE
  *                                                      -> SCATTER
+ * </pre>
  */
 public class EntityGhost extends MoveableEntity implements Runnable {
 

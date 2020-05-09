@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package controller.view;
 
 import controller.input.Input;
@@ -13,7 +8,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.StageStyle;
 
 import java.awt.*;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
@@ -290,7 +284,6 @@ public class ViewController extends Application implements Observer {
         background.setScaleX(SCALE);
         background.setScaleY(SCALE);
         final GraphicsContext gc = background.getGraphicsContext2D();
-        gc.setImageSmoothing(false);
         if (!backgroundHasBeenDrawn) {
             gc.setFill(Color.BLACK);
             gc.fillRect(0, 0, background.getWidth(), background.getHeight());
@@ -330,7 +323,6 @@ public class ViewController extends Application implements Observer {
         foreground.setScaleX(SCALE);
         foreground.setScaleY(SCALE);
         final GraphicsContext gc = foreground.getGraphicsContext2D();
-        gc.setImageSmoothing(false);
         gc.clearRect(0, 0, foreground.getWidth(), foreground.getHeight());
         switch (game.getGameState()) {
             case GAME_SCREEN:
@@ -354,7 +346,6 @@ public class ViewController extends Application implements Observer {
                         Sprite sprite = foregroundSpriteMap.get(player);
                         sprite.startAnimation(SpriteID.DEATH);
                         whenToStopDeathAnim = System.currentTimeMillis() + sprite.getDuration(SpriteID.DEATH);
-
                     }
                     if (System.currentTimeMillis() <= whenToStopDeathAnim) {
                         Point pos = game.getPosition(player);
@@ -391,7 +382,6 @@ public class ViewController extends Application implements Observer {
         gui.setScaleX(SCALE);
         gui.setScaleY(SCALE);
         final GraphicsContext gc = gui.getGraphicsContext2D();
-        gc.setImageSmoothing(true);
         gc.clearRect(0, 0, gui.getWidth(), gui.getHeight());
         switch (game.getGameState()) {
             case GAME_SCREEN:
@@ -500,7 +490,6 @@ public class ViewController extends Application implements Observer {
                     case CONTROLS:
                         gc.setFill(Color.YELLOW);
                         gc.setTextAlign(TextAlignment.CENTER);
-                        gc.setImageSmoothing(false);
                         Sprite pacman = foregroundSpriteMap.get(game.getPlayer());
                         Sprite ghost = foregroundSpriteMap.get(game.getGhost(GhostName.BLINKY));
 
@@ -529,7 +518,6 @@ public class ViewController extends Application implements Observer {
                         gc.setTextAlign(TextAlignment.CENTER);
                         for (String buttonId : MenuTab.HIGHSCORE.getButtonList())
                             drawButton(gc, MenuTab.HIGHSCORE.getButton(buttonId));
-
 
                         gc.setFont(javafx.scene.text.Font.font("Verdana", FontWeight.BOLD,  15));
                         for (int i = 0; i < 9; i++) {

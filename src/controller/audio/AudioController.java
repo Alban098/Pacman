@@ -5,6 +5,7 @@ import modele.game.Game;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,17 +21,17 @@ public class AudioController implements Observer {
     public AudioController() {
         audioChannels = new HashMap<>();
 
-        addChannel(AudioID.DEATH, getClass().getResource("../../resources/audio/death.wav").getFile(), false);
-        addChannel(AudioID.EATING, getClass().getResource("../../resources/audio/eating.wav").getFile(), false);
-        addChannel(AudioID.EATING_FRUIT, getClass().getResource("../../resources/audio/eating-fruit.wav").getFile(), true);
-        addChannel(AudioID.EATING_GHOST, getClass().getResource("../../resources/audio/eating-ghost.wav").getFile(), true);
-        addChannel(AudioID.EXTRA_LIFE, getClass().getResource("../../resources/audio/extra-life.wav").getFile(), false);
-        addChannel(AudioID.GHOST_SIREN, getClass().getResource("../../resources/audio/ghost-siren.wav").getFile(), false);
-        addChannel(AudioID.GHOST_HOME, getClass().getResource("../../resources/audio/ghost-home.wav").getFile(), false);
-        addChannel(AudioID.GHOST_FRIGHTENED, getClass().getResource("../../resources/audio/ghost-frightened.wav").getFile(), false);
-        addChannel(AudioID.INTRO, getClass().getResource("../../resources/audio/ready.wav").getFile(), false);
-        addChannel(AudioID.END, getClass().getResource("../../resources/audio/end.wav").getFile(), false);
-        addChannel(AudioID.WARNING, getClass().getResource("../../resources/audio/NO!.wav").getFile(), false);
+        addChannel(AudioID.DEATH, "resources/audio/death.wav", false);
+        addChannel(AudioID.EATING, "resources/audio/eating.wav", false);
+        addChannel(AudioID.EATING_FRUIT, "resources/audio/eating-fruit.wav", true);
+        addChannel(AudioID.EATING_GHOST, "resources/audio/eating-ghost.wav", true);
+        addChannel(AudioID.EXTRA_LIFE, "resources/audio/extra-life.wav", false);
+        addChannel(AudioID.GHOST_SIREN,"resources/audio/ghost-siren.wav", false);
+        addChannel(AudioID.GHOST_HOME,"resources/audio/ghost-home.wav", false);
+        addChannel(AudioID.GHOST_FRIGHTENED, "resources/audio/ghost-frightened.wav", false);
+        addChannel(AudioID.INTRO, "resources/audio/ready.wav", false);
+        addChannel(AudioID.END, "resources/audio/end.wav", false);
+        addChannel(AudioID.WARNING,"resources/audio/NO!.wav", false);
 
         Game.getInstance().addObserver(this);
         Menu.getInstance().addObserver(this);

@@ -1,6 +1,5 @@
 package modele.game;
 
-import controller.view.ViewController;
 import modele.Loader;
 import modele.Utils;
 import modele.game.entities.EntityGhost;
@@ -86,15 +85,15 @@ public class Game extends Observable implements Runnable {
 
     @Override
     public void run() {
-        long elaspedTime;
+        long elapsedTime;
         while (!closeGameRequested) {
             if (gameState == GameState.GAME_SCREEN)
-                elaspedTime = gameLogic();
+                elapsedTime = gameLogic();
             else
-                elaspedTime = 0;
+                elapsedTime = 0;
             try {
                 nbUpdates++;
-                Thread.sleep(Math.max(1, (FRAME_DURATION - elaspedTime) / UPDATE_PER_FRAME));
+                Thread.sleep(Math.max(1, (FRAME_DURATION - elapsedTime) / UPDATE_PER_FRAME));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -456,7 +455,7 @@ public class Game extends Observable implements Runnable {
     }
 
     /**
-     * Return whether or not the player has received an extra life since the last Movement
+     * Return whether or not the player has eaten a fruit since the last Movement
      * @return has the player received an extra life since last Movement
      */
     public boolean hasEatenFruit() {
@@ -472,16 +471,18 @@ public class Game extends Observable implements Runnable {
     }
 
     /**
-     * Notify the entity that it has received an extra life
+     * Return whether or not the entity has received an extra life since last Movement
      * Useful for managing the sound
+     * @return has the entity has received an extra life since last Movement
      */
     public boolean hasExtraLife() {
         return getPlayer().hasExtraLife();
     }
 
     /**
-     * Notify the entity that it has eaten a GUM
+     * Notify the entity that it has eaten a GUM since last Movement
      * Useful for managing the sound
+     * @return whether or not the entity has eaten a GUM since last Movement
      */
     public boolean hasEatenGum() {
         return getPlayer().hasEatenGum();

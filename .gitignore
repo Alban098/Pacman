@@ -11,7 +11,7 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
+
 *.war
 *.nar
 *.ear
@@ -93,3 +93,5 @@ fabric.properties
 .idea/
 
 Pacman.iml
+
+Livrable/

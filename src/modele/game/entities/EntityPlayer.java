@@ -157,6 +157,7 @@ public class EntityPlayer extends MoveableEntity implements Runnable {
 
     /**
      * Set the player state to DEAD
+     * @param dead is the player dead
      */
     public synchronized void setDead(boolean dead) {
         if (dead)

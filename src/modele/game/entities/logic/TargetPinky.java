@@ -9,6 +9,7 @@ import modele.game.enums.Movement;
 import java.awt.*;
 
 /**
+ * <pre>
  * Pinky's target point is 2 tiles in front of the player
  * except when facing up, it became 2 tiles up and left
  * this is due to an overflow of the position vector in the original game
@@ -38,7 +39,8 @@ import java.awt.*;
  *   ------------
  *   =  Ox[0C 08] -> {12, 8}
  *
- *   this effectively represent 2 tiles up and 2 tiles left
+ * this effectively represent 2 tiles up and 2 tiles left
+ * </pre>
  */
 public class TargetPinky extends TargetTileFinder{
 

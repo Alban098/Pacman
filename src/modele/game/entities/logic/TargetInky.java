@@ -11,6 +11,7 @@ import modele.game.enums.Movement;
 import java.awt.*;
 
 /**
+ * <pre>
  * Inky's target point is the symmetric of Blinky's position relative to the point 1 tile in front of the player (Pivot point)
  * except when facing up, the Pivot point became 1 tiles up and left
  *
@@ -18,26 +19,26 @@ import java.awt.*;
  *
  * The target point was stored in a 16Bits register as 2 8Bits signed integer
  * 0x[XX YY]
- * Same for each direction
+ * Same for each direction<br>
  * UP =    0x[00 FF] -> {0, -1}
  * DOWN =  0x[00 01] -> {0, 1}
  * LEFT =  0x[01 00] -> {1, 0}
  * RIGHT = 0x[FF 00] -> {-1, 0}
  * The direction are flipped compared to out implementation because {0, 0} is at the top right on the original game
- *
  * When the game add that to the player's position it will result in the position 1 tile in front of the player expect for the UP direction :
  * Let's take a random position : {10, 10};
- *          1 1
+ *          1 1<br>
  *      0x[0A 0A] -> {10, 10}
  *   +  0x[00 FF] -> {0, -1}
  *   ------------
- *   =  Ox[0B 09] -> {11, 9}
+ *   =  Ox[0B 09] -> {11, 9 }
  *
- *   this effectively represent 1 tiles up and 1 tiles left
+ *   this effectively represent 1 tiles up and 1 tiles left</pre>
  */
 public class TargetInky extends TargetTileFinder {
 
     /**
+     * <pre>
      * Return the Movement minimizing the Euclidean distance to the target point
      * that is the symmetric of blinky's position relative to the point 2 tile in front of the player (Pivot point)
      * if the player is facing up the Pivot point became 2 tiles up and left
@@ -52,6 +53,7 @@ public class TargetInky extends TargetTileFinder {
      * o : Pivot point
      * B : Blinky
      * X target
+     * </pre>
      * @param grid the grid in which to move
      * @param ghost the ghost trying to move
      * @param player the player used to calculate the target point

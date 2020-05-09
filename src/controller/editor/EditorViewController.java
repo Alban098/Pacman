@@ -1,4 +1,4 @@
- package controller.editor;
+package controller.editor;
 
 import controller.input.InputController;
 import javafx.fxml.FXMLLoader;
@@ -192,7 +192,6 @@ public class EditorViewController extends Application implements Observer {
         background.setScaleX(SCALE);
         background.setScaleY(SCALE);
         final GraphicsContext gc = background.getGraphicsContext2D();
-        gc.setImageSmoothing(false);
         gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, background.getWidth(), background.getHeight());
         for (int i = 0; i < editor.getSizeX(); i++) {
