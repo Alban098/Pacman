@@ -38,6 +38,7 @@ public class ViewController extends Application implements Observer {
     private static final byte MASK_WALL_DOWN =   0b0001;
     private static final byte MASK_GATE_UP =   0b010000;
     private static final byte MASK_GATE_LEFT = 0b100000;
+
     public static final float SCALE = 1;
 
     private Map<MoveableEntity, Sprite> foregroundSpriteMap;
@@ -727,12 +728,11 @@ public class ViewController extends Application implements Observer {
 
         Image logo = GUITileMap.get(GUIElement.LOGO);
         float aspectRatio = (float) (logo.getWidth() / logo.getHeight());
-        MenuTab.MAIN.addButton("1-player", new Button("1 Player", new Rectangle((int)(gui.getWidth() * 1/6), (int)(4*gui.getWidth() * 0.125 / 2 + gui.getWidth() / 1.25 / aspectRatio), (int)(gui.getWidth() / 3 - 5), 34), 18));
-        MenuTab.MAIN.addButton("2-players", new Button("2 Players", new Rectangle((int)(gui.getWidth() * 1/2 + 5), (int)(4*gui.getWidth() * 0.125 / 2 + gui.getWidth() / 1.25 / aspectRatio), (int)(gui.getWidth() / 3 - 5), 34), 18));
-        MenuTab.MAIN.addButton("controls", new Button("Controls", new Rectangle((int)(gui.getWidth() * 1/6), (int)(4*gui.getWidth() * 0.125 / 2 + gui.getWidth() / 1.25 / aspectRatio + 1.5 * 34), (int)(gui.getWidth() / 1.5), 34), 18));
-        MenuTab.MAIN.addButton("highscore", new Button("High Score", new Rectangle((int)(gui.getWidth() * 1/6), (int)(4*gui.getWidth() * 0.125 / 2 + gui.getWidth() / 1.25 / aspectRatio + 3 * 34), (int)(gui.getWidth() / 1.5), 34), 18));
-        MenuTab.MAIN.addButton("editor", new Button("Editor", new Rectangle((int)(gui.getWidth() * 1/6), (int)(4*gui.getWidth() * 0.125 / 2 + gui.getWidth() / 1.25 / aspectRatio + 4.5 * 34), (int)(gui.getWidth() / 1.5), 34), 18));
-
+        MenuTab.MAIN.addButton("1-player", new Button("1 Player", new Rectangle((int)(gui.getWidth() * 1/6), (int)(4*gui.getHeight() * 0.125 / 2 + gui.getHeight() / 1.25 / aspectRatio), (int)(gui.getWidth() / 3 - 5), 34), 18));
+        MenuTab.MAIN.addButton("2-players", new Button("2 Players", new Rectangle((int)(gui.getWidth() * 1/2 + 5), (int)(4*gui.getHeight() * 0.125 / 2 + gui.getHeight() / 1.25 / aspectRatio), (int)(gui.getWidth() / 3 - 5), 34), 18));
+        MenuTab.MAIN.addButton("controls", new Button("Controls", new Rectangle((int)(gui.getWidth() * 1/6), (int)(4*gui.getHeight() * 0.125 / 2 + gui.getHeight() / 1.25 / aspectRatio + 1.5 * 34), (int)(gui.getWidth() / 1.5), 34), 18));
+        MenuTab.MAIN.addButton("highscore", new Button("High Score", new Rectangle((int)(gui.getWidth() * 1/6), (int)(4*gui.getHeight() * 0.125 / 2 + gui.getHeight() / 1.25 / aspectRatio + 3 * 34), (int)(gui.getWidth() / 1.5), 34), 18));
+        MenuTab.MAIN.addButton("editor", new Button("Editor", new Rectangle((int)(gui.getWidth() * 1/6), (int)(4*gui.getHeight() * 0.125 / 2 + gui.getHeight() / 1.25 / aspectRatio + 4.5 * 34), (int)(gui.getWidth() / 1.5), 34), 18));
     }
 
     /**

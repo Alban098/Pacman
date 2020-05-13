@@ -98,6 +98,8 @@ public class Game extends Observable implements Runnable {
                 e.printStackTrace();
             }
         }
+        if (grid != null)
+            grid.stopGame();
     }
 
     /**
