@@ -2,21 +2,21 @@
 
 The goal of the project was to recreate a working game of Pacman using the Observer Design Pattern and a Multithreaded architecture
 
-![Menu](images/menu.png) ![Game](images/game.PNG)
+<img src="images/menu.png" width="50%" alt="Menu"><img src="images/game.gif" width="50%" alt="Game">
 
 The project features : 
 * The base Game fully animated with original Ghosts AI ![player_anim](images/player_anim.gif) ![ghost](images/ghost.gif) ![ghost_eaten](images/ghost_eaten.gif) ![ghost_frightened](images/ghost_frightened.gif) ![player_death](images/player_death.gif)
 * A working Sound Engine
 * Fully customizable Controls
 
-![Controls](images/controls.png)
+![Controls](images/controls.gif)
 * 2 Players mode, the second player controls Blinky (the red ghost)
 * Leaderboard with name and highscore saved
 * A complete Map Editor featuring
   - Multi-level map assignement
   - Customizable map size independant between levels
   - Random maze generator (with no dead-end and warp-around gates)
-![Editor](images/editor1.PNG)
+![Editor](images/editor.gif)
 
 ### Prerequisites
 
@@ -48,4 +48,4 @@ If you use Java 13 or higher, the JavaFX runtime isn't loaded by default, you ca
 
 ## License
 
-This project is licensed under the MIT License
+This project is licensed under the **[MIT license](http://opensource.org/licenses/mit-license.php)**
